@@ -362,7 +362,9 @@ export interface ProviderIssue {
 }
 ```
 
-`ProviderIssue` is also used for warnings, with these additional warning codes: `unknown_limit_key`, `timestamp_unit_heuristic`, `invalid_timestamp`, `invalid_number`, `ambiguous_units`, `precision_loss`, `duplicate_limit_id`, `analytics_failed`, `auth_status_failed`.
+`ProviderIssue` is also used for warnings and for errors on `partial` reports. Additional codes:
+- **Warnings:** `unknown_limit_key`, `invalid_window` (a malformed individual window or field that was skipped), `timestamp_unit_heuristic`, `invalid_timestamp`, `invalid_number`, `ambiguous_units`, `precision_loss`, `duplicate_limit_id`, `auth_status_failed`, `analytics_not_supported`.
+- **Errors on `partial` reports:** `analytics_failed`.
 
 ### 6.3 Limit IDs (stable contract)
 
@@ -385,7 +387,7 @@ Consumers can rely on `session` and `weekly`. An orchestrator does `report.limit
 ### 6.4 `status` semantics
 
 - `ok`: the core rate-limit read succeeded and `errors` is empty.
-- `partial`: the core rate-limit read succeeded, but a secondary read failed. Examples: `--analytics` was requested and `account/usage/read` failed, or `claude --version` failed. `errors` is non-empty.
+- `partial`: the core rate-limit read succeeded, but a secondary read that the caller asked for failed. Example: `--analytics` was requested and `account/usage/read` failed (error code `analytics_failed`). `errors` is non-empty. Informational helpers such as `claude --version` never affect `status` (Section 8.2).
 - `error`: the core rate-limit read failed. `limits` is `[]` and `availability.state` is `"unknown"`.
 
 Warnings never change `status`.
@@ -555,7 +557,14 @@ Files: `src/providers/claude/{index,controlClient,authStatus,schema,normalize}.t
 
 ### 8.2 Concurrent helper calls
 
-These run in parallel with the control client, under the same deadline:
+These run in parallel with the control client, under the same deadline.
+
+**Core-response rule:** once the `get_usage` response has been received, the provider's outcome is decided by that response. This matches the Codex provider, where an analytics read cut off by the deadline yields `partial` and not `timeout`. If the deadline or the caller's signal fires while a helper is still running, the helper is treated as **failed**, never as a provider failure:
+- `--version` → `providerVersion: null`
+- `auth status` → the "auth status failed" branch of Section 8.3 (`rate_limits_unavailable` plus an `auth_status_failed` warning)
+
+`timeout` / `aborted` are reported only when the signal fires **before** the `get_usage` response arrives.
+
 
 1. `claude --version`, 5 s timeout. Parse `/^(\d+\.\d+\.\d+)/` into `source.providerVersion`. Failure → `null`. This does not affect `status`.
 2. **Only when needed** (`rate_limits_available === false`): `claude auth status --json`, 10 s timeout, same temp `cwd`.
