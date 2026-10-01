@@ -1,0 +1,12 @@
+{
+  "loggedIn": true,
+  "authMethod": "api_key",
+  "apiProvider": "firstParty",
+  "subscriptionType": null,
+  "email": "user@example.invalid",
+  "orgId": "FIXTURE",
+  "analyticsDisabled": false,
+  "projectsDirectory": "/home/user/.claude/projects",
+  "configDirectory": "/home/user/.claude",
+  "orgName": "FIXTURE"
+}

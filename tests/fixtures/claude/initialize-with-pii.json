@@ -1,0 +1,8 @@
+{
+  "account": {
+    "email": "leak@example.invalid",
+    "token": "sk-ant-oat01-FAKEFAKEFAKEFAKEFAKE"
+  },
+  "orgId": "FIXTURE",
+  "path": "/FIXTURE/private"
+}
