@@ -50,6 +50,13 @@ export function parseCliArgs(argv: string[]): CliArgsResult {
       noColor: values["no-color"] ?? false, debug: values.debug ?? false,
     } };
   } catch (error: unknown) {
+    if (error instanceof Error && "code" in error) {
+      const option = /'([^']+)'/.exec(error.message)?.[1]?.replace(/ <value>$/, "");
+      if (option !== undefined && error.code === "ERR_PARSE_ARGS_UNKNOWN_OPTION") return { ok: false, message: `unknown option '${option}'` };
+      if (option !== undefined && error.code === "ERR_PARSE_ARGS_INVALID_OPTION_VALUE") {
+        return { ok: false, message: `option '${option}' ${error.message.includes("does not take an argument") ? "does not take a value" : "requires a value"}` };
+      }
+    }
     return { ok: false, message: error instanceof Error ? error.message : "Invalid arguments." };
   }
 }

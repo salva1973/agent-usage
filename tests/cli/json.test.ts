@@ -79,11 +79,19 @@ test("compiled entry begins with the executable shebang", () => {
   expect(readFileSync(cli, "utf8").split("\n")[0]).toBe("#!/usr/bin/env node");
 });
 
-test.each([["--json"], []])("both successful providers produce valid JSON with arguments %j", async (...argv) => {
+test.each([["--json"], []])("both successful providers use the selected output mode with arguments %j", async (...argv) => {
   const { env } = await setup();
   const output = await start(argv, env).output;
   expect(output.code).toBe(0);
   expect(output.stderr).toBe("");
+  if (argv.length === 0) {
+    expect(output.stdout).toMatch(/^CODEX · /);
+    expect(output.stdout).toContain("\n\nCLAUDE · ");
+    expect(output.stdout).toContain("resets today 18:39          (in 4h 59m)");
+    expect(output.stdout).not.toContain("\u001b");
+    expect(output.stdout.endsWith("\n")).toBe(true);
+    return;
+  }
   const report = parseReport(output);
   expect(report.generatedAt).toBe("2026-10-01T13:40:00.000Z");
   expect(report.providers.map((provider) => [provider.provider, provider.status])).toEqual([["codex", "ok"], ["claude", "ok"]]);

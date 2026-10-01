@@ -5,6 +5,7 @@ import { version } from "../version.js";
 import { HELP_TEXT, parseCliArgs } from "./args.js";
 import { EXIT_CODES, exitCodeFor } from "./exitCodes.js";
 import { renderJson } from "./render/json.js";
+import { renderHuman } from "./render/human.js";
 
 function usageError(message: string): void {
   process.stderr.write(`agent-usage: ${redactText(message)}\nTry 'agent-usage --help'.\n`);
@@ -44,8 +45,10 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
       ...(debug ? { debug: (message: string) => { process.stderr.write(`[agent-usage] ${message}\n`); } } : {}),
     });
     if (interrupted) { process.exitCode = EXIT_CODES.INTERRUPTED; return; }
-    // M9's single renderer switch point: M8 emits JSON in both modes.
-    const output = options.json ? renderJson(report) : renderJson(report);
+    const color = process.stdout.isTTY === true && !options.noColor && !process.env.NO_COLOR;
+    const output = options.json ? renderJson(report) : renderHuman(report, {
+      color, debug, now: clockText === undefined ? new Date() : new Date(clockText),
+    });
     process.exitCode = exitCodeFor(report);
     process.stdout.write(output);
     reportWritten = true;
