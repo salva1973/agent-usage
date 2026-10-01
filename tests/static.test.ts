@@ -57,6 +57,15 @@ test("application and library modules do not import or re-export CLI code", () =
   }
 });
 
+test("CLI modules consume the public API without importing provider, process or core internals", () => {
+  for (const { path, ast } of sources) {
+    if (!within(path, "cli")) continue;
+    for (const dependency of dependencies(ast)) {
+      expect(["providers", "process", "core"].some((directory) => targets(path, dependency, directory)), `${path}: ${dependency}`).toBe(false);
+    }
+  }
+});
+
 test("Codex and Claude providers do not depend on each other", () => {
   for (const { path, ast } of sources) {
     const opposite = within(path, "providers/codex") ? "providers/claude" : within(path, "providers/claude") ? "providers/codex" : null;
