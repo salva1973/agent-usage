@@ -1,0 +1,42 @@
+{
+  "rateLimits": {
+    "limitId": "codex",
+    "limitName": null,
+    "normalModelSlug": null,
+    "planType": "plus",
+    "primary": null,
+    "secondary": {
+      "usedPercent": 22,
+      "windowDurationMins": 10080,
+      "resetsAt": 1791119347
+    },
+    "credits": null
+  },
+  "rateLimitsByLimitId": {
+    "codex": {
+      "limitId": "codex",
+      "limitName": null,
+      "normalModelSlug": null,
+      "planType": "plus",
+      "primary": null,
+      "secondary": {
+        "usedPercent": 22,
+        "windowDurationMins": 10080,
+        "resetsAt": 1791119347
+      },
+      "credits": null
+    }
+  },
+  "accountId": "FIXTURE",
+  "rateLimitUpsell": null,
+  "rateLimitResetCredits": null,
+  "individualLimit": {
+    "limit": "100",
+    "used": "25",
+    "remainingPercent": 75,
+    "resetsAt": 1791119347
+  },
+  "ordinaryUsageAllowed": true,
+  "spendControlReached": false,
+  "rateLimitReachedType": null
+}

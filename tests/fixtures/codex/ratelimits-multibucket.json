@@ -1,0 +1,77 @@
+{
+  "rateLimits": {
+    "limitId": "codex",
+    "limitName": null,
+    "normalModelSlug": null,
+    "planType": "plus",
+    "primary": {
+      "usedPercent": 0,
+      "windowDurationMins": 300,
+      "resetsAt": 1790879980
+    },
+    "secondary": {
+      "usedPercent": 22,
+      "windowDurationMins": 10080,
+      "resetsAt": 1791119347
+    },
+    "credits": {
+      "hasCredits": true,
+      "unlimited": false,
+      "balance": "452.0439000000"
+    }
+  },
+  "rateLimitsByLimitId": {
+    "codex": {
+      "limitId": "codex",
+      "limitName": null,
+      "normalModelSlug": null,
+      "planType": "plus",
+      "primary": {
+        "usedPercent": 0,
+        "windowDurationMins": 300,
+        "resetsAt": 1790879980
+      },
+      "secondary": {
+        "usedPercent": 22,
+        "windowDurationMins": 10080,
+        "resetsAt": 1791119347
+      },
+      "credits": {
+        "hasCredits": true,
+        "unlimited": false,
+        "balance": "452.0439000000"
+      }
+    },
+    "codex_other": {
+      "limitId": "codex_other",
+      "limitName": "GPT-5.x-Codex-Spark",
+      "normalModelSlug": "gpt-5.x-codex-spark",
+      "planType": "plus",
+      "primary": {
+        "usedPercent": 50,
+        "windowDurationMins": 300,
+        "resetsAt": 1790879980
+      },
+      "secondary": {
+        "usedPercent": 22,
+        "windowDurationMins": 10080,
+        "resetsAt": 1791119347
+      },
+      "credits": {
+        "hasCredits": true,
+        "unlimited": false,
+        "balance": "452.0439000000"
+      }
+    }
+  },
+  "accountId": "FIXTURE",
+  "rateLimitUpsell": null,
+  "rateLimitResetCredits": {
+    "availableCount": 2,
+    "credits": null
+  },
+  "individualLimit": null,
+  "ordinaryUsageAllowed": true,
+  "spendControlReached": false,
+  "rateLimitReachedType": null
+}

@@ -1,0 +1,37 @@
+{
+  "summary": {
+    "lifetimeTokens": 3103172254,
+    "peakDailyTokens": 108430000,
+    "longestRunningTurnSec": 132,
+    "currentStreakDays": 5,
+    "longestStreakDays": 12
+  },
+  "dailyUsageBuckets": [
+    {
+      "startDate": "2026-10-01",
+      "tokens": 1000
+    },
+    {
+      "startDate": "2026-09-27",
+      "tokens": 2000
+    },
+    {
+      "startDate": "2026-09-30",
+      "tokens": 3000
+    },
+    {
+      "startDate": "2026-09-28",
+      "tokens": 4000
+    },
+    {
+      "startDate": "2026-09-29",
+      "tokens": 5000
+    }
+  ],
+  "threadUsage": [
+    {
+      "threadId": "FIXTURE",
+      "tokens": 1000
+    }
+  ]
+}
