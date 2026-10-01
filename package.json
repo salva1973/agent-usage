@@ -1,0 +1,25 @@
+{
+  "name": "agent-usage",
+  "version": "0.1.0",
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "bin": { "agent-usage": "dist/cli/main.js" },
+  "exports": {
+    ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "test": "vitest run",
+    "test:live": "vitest run tests/live",
+    "typecheck": "tsc --noEmit",
+    "schema": "npm run build && node scripts/gen-schema.mjs"
+  },
+  "dependencies": { "zod": "^4" },
+  "devDependencies": {
+    "@types/node": "^22",
+    "ajv": "^8",
+    "ajv-formats": "^3",
+    "typescript": "^5",
+    "vitest": "~4.0.0"
+  }
+}
