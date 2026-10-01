@@ -66,17 +66,108 @@ test("Codex limited fixture renders its explicit reason", () => {
 });
 
 test("Claude scoped fixture keeps scoped rows after the canonical windows", () => {
-  expect(renderHuman(report(claude("get-usage-max-scoped.json")), opts)).toBe(`CLAUDE · max · available (derived)
-  5h            2% used   resets today 17:30          (in 3h 50m)
-  Weekly       11% used   resets Tue 06 Oct 15:00     (in 5d 1h)
-  Weekly (Opus)100% used   resets Tue 06 Oct 15:00     (in 5d 1h)
-  Weekly (Sonnet) 20% used   resets Tue 06 Oct 15:00     (in 5d 1h)
-  Weekly (OAuth apps) 12% used   resets Tue 06 Oct 15:00     (in 5d 1h)
-  Weekly (Cowork)  9% used   resets Tue 06 Oct 15:00     (in 5d 1h)
-  Weekly (Fable) 40% used   resets Tue 06 Oct 15:00     (in 5d 1h)
-  nimbus_quill  5% used   resets Tue 06 Oct 15:00     (in 5d 1h)
-  Extra usage  off (out_of_credits) · 0.00 / 240.00 EUR
+  const provider = claude("get-usage-max-scoped.json");
+  const limitWidth = Math.max(12, ...provider.limits.map((limit) => limit.label.length + 1));
+  const infoWidth = Math.max(13, limitWidth + 1, ...provider.credits.map((credit) => credit.label.length + 2));
+  const literal = `CLAUDE · max · available (derived)
+  5h                    2% used   resets today 17:30          (in 3h 50m)
+  Weekly               11% used   resets Tue 06 Oct 15:00     (in 5d 1h)
+  Weekly (Opus)       100% used   resets Tue 06 Oct 15:00     (in 5d 1h)
+  Weekly (Sonnet)      20% used   resets Tue 06 Oct 15:00     (in 5d 1h)
+  Weekly (OAuth apps)  12% used   resets Tue 06 Oct 15:00     (in 5d 1h)
+  Weekly (Cowork)       9% used   resets Tue 06 Oct 15:00     (in 5d 1h)
+  Weekly (Fable)       40% used   resets Tue 06 Oct 15:00     (in 5d 1h)
+  nimbus_quill          5% used   resets Tue 06 Oct 15:00     (in 5d 1h)
+  Extra usage          off (out_of_credits) · 0.00 / 240.00 EUR
+`;
+  // Verify the handoff's literal against its width rule before using it as the oracle.
+  expect({ limitWidth, infoWidth }).toEqual({ limitWidth: 20, infoWidth: 21 });
+  const lines = literal.split("\n");
+  provider.limits.forEach((limit, index) => {
+    expect(lines[index + 1]!.startsWith(`  ${limit.label.padEnd(limitWidth)}${String(limit.usedPercent).padStart(3)}% used   `)).toBe(true);
+  });
+  expect(lines.at(-2)).toBe(`  ${"Extra usage".padEnd(infoWidth)}off (out_of_credits) · 0.00 / 240.00 EUR`);
+  expect(renderHuman(report(provider), opts)).toBe(literal);
+});
+
+test.each(["codex", "claude"])("%s short-label rows retain the 12/13 minimum widths", (id) => {
+  const provider = id === "codex" ? codex() : claude();
+  const output = renderHuman(report(provider), opts);
+  expect(output).toBe(id === "codex" ? codexPlain : claudePlain);
+  const limits = output.split("\n").filter((line) => line.includes("% used"));
+  expect(limits.map((line) => line.indexOf("%"))).toEqual([17, 17]);
+  const credit = provider.credits[0]!;
+  const creditLine = output.split("\n").find((line) => line.startsWith(`  ${credit.label}`))!;
+  expect(creditLine.slice(0, 15)).toBe(`  ${credit.label.padEnd(13)}`);
+});
+
+test("a single forty-character limit label always leaves a separating space", () => {
+  const provider = codex();
+  const label = "L".repeat(40);
+  provider.limits = [{ ...provider.limits[0]!, label, usedPercent: 100, remainingPercent: 0, resetsAt: null }];
+  const lines = renderHuman(report(provider), opts).split("\n");
+  expect(lines[1]).toBe(`  ${label} 100% used`);
+  expect(lines[1]!.indexOf("%")).toBe(46);
+  expect(lines[2]).toBe(`  Credits${" ".repeat(35)}452.04 credits`);
+  expect(lines[3]).toBe(`  Resets${" ".repeat(36)}2 reset credits available (never used by agent-usage)`);
+});
+
+test("long credit labels widen all info rows and leave limit columns at their minimum", () => {
+  const provider = codex();
+  const label = "C".repeat(40);
+  provider.credits[0]!.label = label;
+  provider.credits.push({ ...claude().credits[0]! });
+  provider.analytics = { lifetimeTokens: 0, peakDailyTokens: null, longestRunningTurnSec: null,
+    currentStreakDays: null, longestStreakDays: null, daily: [] };
+  const lines = renderHuman(report(provider), opts).split("\n");
+  expect(lines.slice(1, 3).map((line) => line.indexOf("%"))).toEqual([17, 17]);
+  expect(lines.slice(3, 7)).toEqual([
+    `  ${label}  452.04 credits`,
+    `  Extra usage${" ".repeat(31)}off (out_of_credits) · 0.00 / 240.00 EUR`,
+    `  Resets${" ".repeat(36)}2 reset credits available (never used by agent-usage)`,
+    `  Tokens${" ".repeat(36)}lifetime 0 · peak day ? · last 7 days 0`,
+  ]);
+  expect(lines.slice(3, 7).map((line) => line.slice(44))).toEqual([
+    "452.04 credits", "off (out_of_credits) · 0.00 / 240.00 EUR",
+    "2 reset credits available (never used by agent-usage)", "lifetime 0 · peak day ? · last 7 days 0",
+  ]);
+});
+
+test("scoped widths are local to their provider block", () => {
+  const output = renderHuman(report(claude("get-usage-max-scoped.json"), codex()), opts);
+  const [scoped, short] = output.trimEnd().split("\n\n");
+  expect(scoped!.split("\n")[1]).toBe("  5h                    2% used   resets today 17:30          (in 3h 50m)");
+  expect(`${short}\n`).toBe(codexPlain);
+});
+
+test.each([false, true])("all scoped percent columns align with color=%s", (color) => {
+  const provider = claude("get-usage-max-scoped.json");
+  const output = renderHuman(report(provider), { ...opts, color }).replace(/\u001b\[\d+m/g, "");
+  const rows = output.split("\n").filter((line) => line.includes("% used"));
+  expect(rows).toHaveLength(provider.limits.length);
+  expect(rows.every((line) => line.indexOf("%") === 25)).toBe(true);
+  for (const [index, limit] of provider.limits.entries()) expect(rows[index]!.slice(2 + limit.label.length)).toMatch(/^ +\d/);
+});
+
+test("info-only providers retain the minimum width", () => {
+  const provider = codex();
+  provider.limits = [];
+  expect(renderHuman(report(provider), opts)).toBe(`CODEX · plus · available
+  Credits      452.04 credits
+  Resets       2 reset credits available (never used by agent-usage)
 `);
+});
+
+test("widening a label leaves partial issues and debug warnings untouched", () => {
+  const provider = codex();
+  provider.limits[0]!.label = "L".repeat(40);
+  provider.status = "partial";
+  provider.errors = [{ code: "analytics_failed", message: "Analytics failed.", retryable: true, hint: null }];
+  provider.warnings = [{ code: "precision_loss", message: "Count omitted.", retryable: false, hint: null }];
+  const output = renderHuman(report(provider), { ...opts, debug: true });
+  expect(output.split("\n").slice(-3)).toEqual([
+    "  ! analytics_failed  Analytics failed.", "  · precision_loss  Count omitted.", "",
+  ]);
 });
 
 test("partial analytics failure follows the ordinary observation rows", () => {
@@ -176,7 +267,7 @@ test("canonical windows sort first and all other limits retain report order", ()
   provider.limits = [others[1]!, weekly!, others[0]!, session!, ...others.slice(2)];
   const output = renderHuman(report(provider), opts);
   expect(output.split("\n").slice(1, 5).map((line) => line.trimStart().split("% used")[0])).toEqual([
-    "5h            2", "Weekly       11", "Weekly (Sonnet) 20", "Weekly (Opus)100",
+    "5h                    2", "Weekly               11", "Weekly (Sonnet)      20", "Weekly (Opus)       100",
   ]);
 });
 
