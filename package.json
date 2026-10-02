@@ -21,6 +21,6 @@
     "ajv": "^8",
     "ajv-formats": "^3",
     "typescript": "^5",
-    "vitest": "~4.0.0"
+    "vitest": "~4.1.11"
   }
 }
