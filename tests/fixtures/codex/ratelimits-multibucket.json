@@ -5,19 +5,19 @@
     "normalModelSlug": null,
     "planType": "plus",
     "primary": {
-      "usedPercent": 0,
+      "usedPercent": 12,
       "windowDurationMins": 300,
-      "resetsAt": 1790879980
+      "resetsAt": 1790881920
     },
     "secondary": {
-      "usedPercent": 22,
+      "usedPercent": 41,
       "windowDurationMins": 10080,
-      "resetsAt": 1791119347
+      "resetsAt": 1791189000
     },
     "credits": {
       "hasCredits": true,
       "unlimited": false,
-      "balance": "452.0439000000"
+      "balance": "318.2716000000"
     }
   },
   "rateLimitsByLimitId": {
@@ -27,19 +27,19 @@
       "normalModelSlug": null,
       "planType": "plus",
       "primary": {
-        "usedPercent": 0,
+        "usedPercent": 12,
         "windowDurationMins": 300,
-        "resetsAt": 1790879980
+        "resetsAt": 1790881920
       },
       "secondary": {
-        "usedPercent": 22,
+        "usedPercent": 41,
         "windowDurationMins": 10080,
-        "resetsAt": 1791119347
+        "resetsAt": 1791189000
       },
       "credits": {
         "hasCredits": true,
         "unlimited": false,
-        "balance": "452.0439000000"
+        "balance": "318.2716000000"
       }
     },
     "codex_other": {
@@ -50,24 +50,24 @@
       "primary": {
         "usedPercent": 50,
         "windowDurationMins": 300,
-        "resetsAt": 1790879980
+        "resetsAt": 1790881920
       },
       "secondary": {
-        "usedPercent": 22,
+        "usedPercent": 41,
         "windowDurationMins": 10080,
-        "resetsAt": 1791119347
+        "resetsAt": 1791189000
       },
       "credits": {
         "hasCredits": true,
         "unlimited": false,
-        "balance": "452.0439000000"
+        "balance": "318.2716000000"
       }
     }
   },
   "accountId": "FIXTURE",
   "rateLimitUpsell": null,
   "rateLimitResetCredits": {
-    "availableCount": 2,
+    "availableCount": 3,
     "credits": null
   },
   "individualLimit": null,

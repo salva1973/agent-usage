@@ -18,7 +18,7 @@ test("redacts all occurrences and mixed patterns in multiline diagnostics", () =
   expect(redactText(sample)).toBe("[REDACTED]\n[REDACTED] [REDACTED]\n[REDACTED]");
 });
 
-test.each(["", "spawn codex app-server; id 3; exit 0; took 700 ms", "Weekly 22% used; 452.0439000000 credits", "sk-short", "a".repeat(39)])(
+test.each(["", "spawn codex app-server; id 3; exit 0; took 700 ms", "Weekly 41% used; 318.2716000000 credits", "sk-short", "a".repeat(39)])(
   "leaves ordinary text unchanged: %s", (input) => expect(redactText(input)).toBe(input),
 );
 

@@ -14,10 +14,10 @@ describe("round2 and clamp", () => {
 
 describe("toDecimal", () => {
   test.each([
-    [0, 0, "0"], [0, 2, "0.00"], [24000, 2, "240.00"], [5, 2, "0.05"],
+    [0, 0, "0"], [0, 2, "0.00"], [5000, 2, "50.00"], [5, 2, "0.05"],
     [123, 0, "123"], [1, 6, "0.000001"], [Number.MAX_SAFE_INTEGER, 2, "90071992547409.91"],
   ])("converts %s at %s dp exactly", (input, dp, expected) => expect(toDecimal(input, dp)).toBe(expected));
-  test.each([-1, 0.5, NaN, Infinity, "24000"])("rejects invalid minor units %s", (input) => {
+  test.each([-1, 0.5, NaN, Infinity, "5000"])("rejects invalid minor units %s", (input) => {
     const warnings: ProviderIssue[] = [];
     expect(toDecimal(input, 2, warnings)).toBeNull();
     expect(warnings.map((issue) => issue.code)).toEqual(["invalid_number"]);
@@ -40,7 +40,7 @@ describe("toDecimal", () => {
 });
 
 describe("safeInt and isDecimalString", () => {
-  test.each([0, -1, 3103172254, Number.MAX_SAFE_INTEGER])("retains safe integer %s", (input) => expect(safeInt(input)).toBe(input));
+  test.each([0, -1, 1846203917, Number.MAX_SAFE_INTEGER])("retains safe integer %s", (input) => expect(safeInt(input)).toBe(input));
   test.each([null, undefined])("retains unknown %s", (input) => {
     const warnings: ProviderIssue[] = [];
     expect(safeInt(input, warnings)).toBeNull();
@@ -51,6 +51,6 @@ describe("safeInt and isDecimalString", () => {
     expect(safeInt(input, warnings)).toBeNull();
     expect(warnings[0]?.code).toBe("invalid_number");
   });
-  test.each(["0", "452.0439000000", "-12.00", "001.20"])("recognizes decimal string %s", (input) => expect(isDecimalString(input)).toBe(true));
+  test.each(["0", "318.2716000000", "-12.00", "001.20"])("recognizes decimal string %s", (input) => expect(isDecimalString(input)).toBe(true));
   test.each([null, 1, "1e3", ".5", "1.", "+1", "NaN", " 1", "1,000"])("rejects non-decimal %s", (input) => expect(isDecimalString(input)).toBe(false));
 });

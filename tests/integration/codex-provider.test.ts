@@ -32,10 +32,10 @@ test.each(["ok", "ok-out-of-order", "notifications-noise", "stderr-noise"])("%s 
   expect(report.status).toBe("ok");
   expect(report.source).toEqual({ method: "codex-app-server", stability: "supported", providerVersion: "0.159.2" });
   expect(report.account).toEqual({ plan: "plus", authMode: "chatgpt" });
-  expect(report.limits.map((limit) => [limit.id, limit.usedPercent])).toEqual([["session", 0], ["weekly", 22]]);
-  expect(report.credits[0]?.balance).toBe("452.0439000000");
-  expect(report.resetCredits).toEqual({ availableCount: 2 });
-  expect(report.analytics?.lifetimeTokens).toBe(3103172254);
+  expect(report.limits.map((limit) => [limit.id, limit.usedPercent])).toEqual([["session", 12], ["weekly", 41]]);
+  expect(report.credits[0]?.balance).toBe("318.2716000000");
+  expect(report.resetCredits).toEqual({ availableCount: 3 });
+  expect(report.analytics?.lifetimeTokens).toBe(1846203917);
   expect(report.analytics?.daily.map((bucket) => bucket.date)).toEqual(["2026-09-27", "2026-09-28", "2026-09-29", "2026-09-30", "2026-10-01"]);
   expect(report.errors).toEqual([]);
   expect(report.warnings).toEqual([]);
@@ -94,7 +94,7 @@ test.each([["analytics-error", "upstream_error", true], ["analytics-malformed", 
     expect(report.status).toBe("partial");
     expect(report.analytics).toBeNull();
     expect(report.limits).toHaveLength(2);
-    expect(report.credits[0]?.balance).toBe("452.0439000000");
+    expect(report.credits[0]?.balance).toBe("318.2716000000");
     expect(report.errors).toHaveLength(1);
     expect(report.errors[0]).toMatchObject({ code: "analytics_failed", retryable });
     expect(report.errors[0]?.message).toContain(code);

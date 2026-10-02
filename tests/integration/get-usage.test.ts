@@ -183,7 +183,7 @@ test("analytics option reaches both providers without changing the contract", as
   const { options } = await setup();
   const report = await getUsage({ ...options, includeAnalytics: true });
   expect(UsageReportSchema.safeParse(report).success).toBe(true);
-  expect(report.providers[0]?.analytics?.lifetimeTokens).toBe(3103172254);
+  expect(report.providers[0]?.analytics?.lifetimeTokens).toBe(1846203917);
   expect(report.providers[1]?.warnings.map((issue) => issue.code)).toEqual(["analytics_not_supported"]);
 });
 

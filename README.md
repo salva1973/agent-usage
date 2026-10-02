@@ -6,11 +6,16 @@ A read-only CLI and TypeScript library that observes Codex and Claude Code usage
 
 It makes no scheduling, routing or purchasing decisions, changes no account state, handles no credentials, and sends no prompts or model calls. Reset credits are counted, never consumed. It does not scrape either provider's TUI.
 
+> **Unofficial project.** agent-usage is an independent open-source tool. It is not affiliated with, endorsed by or supported by OpenAI or Anthropic. "Codex", "ChatGPT", "Claude" and "Claude Code" are trademarks of their respective owners. It reads data through the provider CLIs you have installed and authenticated, and part of that data comes from an interface its provider marks experimental (see [How data is obtained, and stability](#how-data-is-obtained-and-stability)). Use it in accordance with your providers' terms.
+
 ## Requirements
 
 - Node.js ≥ 22.
 - `codex` installed and logged in with a ChatGPT account.
 - `claude` installed and logged in with a claude.ai subscription.
+- Linux or another POSIX system. Developed and tested on Linux ARM64 (Raspberry Pi OS). Other POSIX systems such as macOS are expected to work but are untested. Windows is not supported, because child processes are managed as POSIX process groups.
+
+v0.1.0 was verified against Codex CLI 0.159.2 and Claude Code 2.1.286–2.1.287. Newer provider versions may change their interfaces; see the stability notes below.
 
 Provider executables normally come from PATH. Override their locations with `AGENT_USAGE_CODEX_BIN` and `AGENT_USAGE_CLAUDE_BIN`, or the library's `binaries` option.
 
@@ -55,15 +60,15 @@ This sample is the golden test fixture, using UTC and a fixed clock; these are i
 
 ```text
 CODEX · plus · available
-  5h            0% used   resets today 18:39          (in 4h 59m)
-  Weekly       22% used   resets Sun 04 Oct 13:09     (in 2d 23h)
-  Credits      452.04 credits
-  Resets       2 reset credits available (never used by agent-usage)
+  5h           12% used   resets today 19:12          (in 5h 32m)
+  Weekly       41% used   resets Mon 05 Oct 08:30     (in 3d 18h)
+  Credits      318.27 credits
+  Resets       3 reset credits available (never used by agent-usage)
 
 CLAUDE · pro · available (derived)
-  5h            2% used   resets today 17:30          (in 3h 50m)
-  Weekly       11% used   resets Tue 06 Oct 15:00     (in 5d 1h)
-  Extra usage  off (out_of_credits) · 0.00 / 240.00 EUR
+  5h            7% used   resets today 18:00          (in 4h 20m)
+  Weekly       26% used   resets Wed 07 Oct 09:00     (in 5d 19h)
+  Extra usage  off (out_of_credits) · 12.50 / 50.00 USD
 ```
 
 Human reset times use the caller's local timezone. Piped output has no ANSI colors; `--no-color` or nonempty `NO_COLOR` also disables them. `--watch` and `--raw` are unavailable in v1 and produce usage errors.
@@ -228,7 +233,7 @@ Use `--debug` for redacted diagnostics on stderr. Keep JSON stdout separate when
 
 - Claude availability is always derived from account-wide limits; scoped exhaustion is listed separately.
 - Claude's raw `limits[]` severity and `spend` are not normalized yet.
-- No cache: every run spawns provider processes, including Claude's version helper. Startup costs about 1–2 seconds per process on the investigated Pi, with substantial transient memory use; this is not a latency guarantee.
+- No cache: every run spawns provider processes, including Claude's version helper. Startup costs about 1–2 seconds per process on the Raspberry Pi (ARM64) used for development, with substantial transient memory use; this is not a latency guarantee.
 - Codex credits are opaque provider units, not currency.
 - Codex availability is also derived when `ordinaryUsageAllowed` is null.
 - Experimental Claude data can change during auto-updates. Unknown units become null with warnings, and Codex timestamp heuristics also warn. No fallback silently guesses data.
@@ -272,3 +277,11 @@ These features are deferred and unavailable in v1:
 - Separate REST, Prometheus and cron/log adapters that consume the library.
 - Reset-credit detail rows, always read-only; consumption remains out of scope forever.
 - An opt-in Claude fallback if `get_usage` disappears, requiring a new specification decision.
+
+## Contributing
+
+Contributions are welcome within the project's scope; see [CONTRIBUTING.md](CONTRIBUTING.md). Never include credentials, account identifiers or raw provider payloads in issues or pull requests.
+
+## License
+
+[MIT](LICENSE) © 2026 Salvatore Vivolo

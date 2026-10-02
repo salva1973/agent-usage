@@ -5,15 +5,15 @@ import { epochToIso, formatDuration, isoOrNull } from "../../../src/domain/time.
 describe("epochToIso", () => {
   test("uses seconds by default", () => {
     const warnings: ProviderIssue[] = [];
-    expect(epochToIso(1790879980, warnings)).toBe("2026-10-01T18:39:40.000Z");
+    expect(epochToIso(1790881920, warnings)).toBe("2026-10-01T19:12:00.000Z");
     expect(warnings).toEqual([]);
   });
   test("detects milliseconds and warns", () => {
     const warnings: ProviderIssue[] = [];
-    expect(epochToIso(1790879980000, warnings)).toBe("2026-10-01T18:39:40.000Z");
+    expect(epochToIso(1790881920000, warnings)).toBe("2026-10-01T19:12:00.000Z");
     expect(warnings.map((issue) => issue.code)).toEqual(["timestamp_unit_heuristic"]);
   });
-  test.each([0, -1, NaN, Infinity, -Infinity, "1790879980"])("rejects invalid timestamp %s", (input) => {
+  test.each([0, -1, NaN, Infinity, -Infinity, "1790881920"])("rejects invalid timestamp %s", (input) => {
     const warnings: ProviderIssue[] = [];
     expect(epochToIso(input, warnings)).toBeNull();
     expect(warnings.map((issue) => issue.code)).toEqual(["invalid_timestamp"]);
@@ -39,8 +39,8 @@ describe("epochToIso", () => {
 
 describe("isoOrNull", () => {
   test("normalizes microseconds and timezone offsets to UTC milliseconds", () => {
-    expect(isoOrNull("2026-10-01T17:30:00.107017+00:00")).toBe("2026-10-01T17:30:00.107Z");
-    expect(isoOrNull("2026-10-01T19:30:00.107+02:00")).toBe("2026-10-01T17:30:00.107Z");
+    expect(isoOrNull("2026-10-01T18:00:00.214031+00:00")).toBe("2026-10-01T18:00:00.214Z");
+    expect(isoOrNull("2026-10-01T20:00:00.214+02:00")).toBe("2026-10-01T18:00:00.214Z");
   });
   test.each(["not a date", "", NaN, 123])("rejects invalid input %s", (input) => {
     const warnings: ProviderIssue[] = [];

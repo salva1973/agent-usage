@@ -27,14 +27,14 @@ function fullReport(): UsageReport {
         availability: { state: "available", basis: "provider_flag", reason: null, exhaustedLimitIds: [] },
         limits: [
           {
-            id: "session", kind: "session", scope: { type: "account" }, label: "5h", usedPercent: 0,
-            remainingPercent: 100, windowMinutes: 300, windowSource: "reported",
-            resetsAt: "2026-10-01T18:39:40.000Z", providerKey: "rateLimits.primary",
+            id: "session", kind: "session", scope: { type: "account" }, label: "5h", usedPercent: 12,
+            remainingPercent: 88, windowMinutes: 300, windowSource: "reported",
+            resetsAt: "2026-10-01T19:12:00.000Z", providerKey: "rateLimits.primary",
           },
           {
-            id: "weekly", kind: "weekly", scope: { type: "account" }, label: "Weekly", usedPercent: 22,
-            remainingPercent: 78, windowMinutes: 10080, windowSource: "reported",
-            resetsAt: "2026-10-04T13:09:07.000Z", providerKey: "rateLimits.secondary",
+            id: "weekly", kind: "weekly", scope: { type: "account" }, label: "Weekly", usedPercent: 41,
+            remainingPercent: 59, windowMinutes: 10080, windowSource: "reported",
+            resetsAt: "2026-10-05T08:30:00.000Z", providerKey: "rateLimits.secondary",
           },
           {
             id: "other:bucket:extra", kind: "other",
@@ -49,13 +49,13 @@ function fullReport(): UsageReport {
           },
         ],
         credits: [{
-          id: "codex_credits", label: "Credits", unit: { type: "provider_credits" }, balance: "452.0439000000",
+          id: "codex_credits", label: "Credits", unit: { type: "provider_credits" }, balance: "318.2716000000",
           used: null, limit: null, usedPercent: null, unlimited: false, hasCredits: true, enabled: null,
           disabledReason: null, providerKey: "rateLimits.credits",
         }],
-        resetCredits: { availableCount: 2 },
+        resetCredits: { availableCount: 3 },
         analytics: {
-          lifetimeTokens: 3103172254, peakDailyTokens: null, longestRunningTurnSec: 100,
+          lifetimeTokens: 1846203917, peakDailyTokens: null, longestRunningTurnSec: 100,
           currentStreakDays: 1, longestStreakDays: 2,
           daily: [{ date: "2026-10-01", tokens: 1000 }],
         },
@@ -68,14 +68,14 @@ function fullReport(): UsageReport {
         availability: { state: "available", basis: "derived_from_limits", reason: null, exhaustedLimitIds: ["weekly:model:opus"] },
         limits: [
           {
-            id: "session", kind: "session", scope: { type: "account" }, label: "5h", usedPercent: 2,
-            remainingPercent: 98, windowMinutes: 300, windowSource: "inferred",
-            resetsAt: "2026-10-01T17:30:00.107Z", providerKey: "rate_limits.five_hour",
+            id: "session", kind: "session", scope: { type: "account" }, label: "5h", usedPercent: 7,
+            remainingPercent: 93, windowMinutes: 300, windowSource: "inferred",
+            resetsAt: "2026-10-01T18:00:00.214Z", providerKey: "rate_limits.five_hour",
           },
           {
-            id: "weekly", kind: "weekly", scope: { type: "account" }, label: "Weekly", usedPercent: 11,
-            remainingPercent: 89, windowMinutes: 10080, windowSource: "inferred",
-            resetsAt: "2026-10-06T15:00:00.107Z", providerKey: "rate_limits.seven_day",
+            id: "weekly", kind: "weekly", scope: { type: "account" }, label: "Weekly", usedPercent: 26,
+            remainingPercent: 74, windowMinutes: 10080, windowSource: "inferred",
+            resetsAt: "2026-10-07T09:00:00.214Z", providerKey: "rate_limits.seven_day",
           },
           {
             id: "weekly:model:opus", kind: "weekly", scope: { type: "model", model: "opus" }, label: "Weekly (Opus)",
@@ -89,8 +89,8 @@ function fullReport(): UsageReport {
           },
         ],
         credits: [{
-          id: "claude_extra_usage", label: "Extra usage", unit: { type: "currency", currency: "EUR" }, balance: null,
-          used: "0.00", limit: "240.00", usedPercent: 0, unlimited: null, hasCredits: null, enabled: false,
+          id: "claude_extra_usage", label: "Extra usage", unit: { type: "currency", currency: "USD" }, balance: null,
+          used: "12.50", limit: "50.00", usedPercent: 25, unlimited: null, hasCredits: null, enabled: false,
           disabledReason: "out_of_credits", providerKey: "rate_limits.extra_usage",
         }],
         resetCredits: null, analytics: null, errors: [], warnings: [],
@@ -153,7 +153,7 @@ describe("invalid report values", () => {
     ["missing required null", (report: UsageReport) => ({ ...report, providers: [{ ...report.providers[0], account: undefined }] })],
     ["fractional timing", (report: UsageReport) => ({ ...report, providers: [{ ...report.providers[0], durationMs: 1.5 }] })],
     ["negative timing", (report: UsageReport) => ({ ...report, providers: [{ ...report.providers[0], durationMs: -1 }] })],
-    ["float money", (report: UsageReport) => ({ ...report, providers: [{ ...report.providers[0], credits: [{ ...report.providers[0]!.credits[0], balance: 452.04 }] }] })],
+    ["float money", (report: UsageReport) => ({ ...report, providers: [{ ...report.providers[0], credits: [{ ...report.providers[0]!.credits[0], balance: 318.27 }] }] })],
     ["exponential money", (report: UsageReport) => ({ ...report, providers: [{ ...report.providers[0], credits: [{ ...report.providers[0]!.credits[0], balance: "1e3" }] }] })],
     ["unsafe token count", (report: UsageReport) => ({ ...report, providers: [{ ...report.providers[0], analytics: { ...report.providers[0]!.analytics, lifetimeTokens: Number.MAX_SAFE_INTEGER + 1 } }] })],
     ["oversized message", (report: UsageReport) => ({ ...report, providers: [{ ...report.providers[0], warnings: [{ code: "warning", message: "x".repeat(301), retryable: false, hint: null }] }] })],

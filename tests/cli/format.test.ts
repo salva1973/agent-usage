@@ -11,7 +11,7 @@ test.each<[number | null, string]>([
 
 test.each<[number | null, string]>([
   [0, "0"], [999, "999"], [1000, "1.0k"], [1999, "2.0k"], [1000000, "1.00M"],
-  [12400000, "12.40M"], [1000000000, "1.00B"], [3103172254, "3.10B"], [null, "?"],
+  [12400000, "12.40M"], [1000000000, "1.00B"], [1846203917, "1.85B"], [null, "?"],
 ])("formatCompact(%s) is %s", (value, expected) => {
   expect(formatCompact(value)).toBe(expected);
 });
@@ -29,9 +29,9 @@ describe.each(["UTC", "Europe/Rome"])("local calendar formatting in %s", (timezo
   beforeEach(() => vi.stubEnv("TZ", timezone));
 
   test.each([
-    ["2026-10-01T13:40:00Z", "2026-10-01T18:39:40Z", "resets today 18:39", "resets today 20:39"],
+    ["2026-10-01T13:40:00Z", "2026-10-01T19:12:00Z", "resets today 19:12", "resets today 21:12"],
     ["2026-10-01T13:40:00Z", "2026-10-02T10:00:00Z", "resets tomorrow 10:00", "resets tomorrow 12:00"],
-    ["2026-10-01T13:40:00Z", "2026-10-04T13:09:07Z", "resets Sun 04 Oct 13:09", "resets Sun 04 Oct 15:09"],
+    ["2026-10-01T13:40:00Z", "2026-10-05T08:30:00Z", "resets Mon 05 Oct 08:30", "resets Mon 05 Oct 10:30"],
     ["2026-10-31T12:00:00Z", "2026-11-01T10:00:00Z", "resets tomorrow 10:00", "resets tomorrow 11:00"],
     ["2026-10-31T12:00:00Z", "2026-11-02T10:00:00Z", "resets Mon 02 Nov 10:00", "resets Mon 02 Nov 11:00"],
     ["2026-12-31T12:00:00Z", "2027-01-01T10:00:00Z", "resets tomorrow 10:00", "resets tomorrow 11:00"],

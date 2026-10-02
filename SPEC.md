@@ -62,6 +62,8 @@ It normalizes that state into one provider-neutral model. It exposes the result 
 
 ## 2. Investigation findings (verified 2026-10-01)
 
+> **Note:** for the public release, the numbers in the examples below have been replaced with synthetic values, as have the test fixtures. That covers usage percentages, reset timestamps, credit balances, spend and cap amounts, currency, and token counts. Protocol shapes, field names, units and observed behaviors are unchanged.
+
 ### 2.1 Environment
 
 | Item | Value |
@@ -84,13 +86,13 @@ Observed facts:
 1. `initialize` responds in about 150 ms with `{userAgent, codexHome, platformFamily, platformOs}`. The client then sends the `{"method":"initialized"}` notification.
 2. The server emits unsolicited notifications right away (`configWarning`, `remoteControl/status/changed`, `account/updated`). It also writes log noise to stderr, for example a bubblewrap warning on this Pi.
 3. `account/read` → `{account:{type:"chatgpt",email,planType:"plus"}, requiresOpenaiAuth:true, workspaceRouting:{...}}`.
-4. `account/rateLimits/read` with `{excludeResetCreditDetails:true}` → about 700 ms. It returns `primary {usedPercent:0, windowDurationMins:300, resetsAt:1790879980}` and `secondary {usedPercent:22, windowDurationMins:10080, resetsAt:1791119347}`.
+4. `account/rateLimits/read` with `{excludeResetCreditDetails:true}` → about 700 ms. It returns `primary {usedPercent:12, windowDurationMins:300, resetsAt:1790881920}` and `secondary {usedPercent:41, windowDurationMins:10080, resetsAt:1791189000}`.
    - **`resetsAt` is Unix epoch seconds.**
-   - `credits {hasCredits:true, unlimited:false, balance:"452.0439000000"}`: **balance is a decimal string**.
+   - `credits {hasCredits:true, unlimited:false, balance:"318.2716000000"}`: **balance is a decimal string**.
    - `rateLimitsByLimitId {"codex": <same snapshot>}`.
-   - `rateLimitResetCredits {availableCount:2, credits:null}`.
+   - `rateLimitResetCredits {availableCount:3, credits:null}`.
    - `ordinaryUsageAllowed:true`, `spendControlReached:false`, `rateLimitReachedType:null`.
-5. `account/usage/read` → `summary{lifetimeTokens:3103172254,...}` and `dailyUsageBuckets[{startDate:"2026-02-03",tokens:...}]`.
+5. `account/usage/read` → `summary{lifetimeTokens:1846203917,...}` and `dailyUsageBuckets[{startDate:"2026-02-03",tokens:...}]`.
 6. **Responses can arrive out of order.** The rate-limits response (id 3) arrived *after* the usage response (id 4). A naive "close after the last request" client lost it. The client MUST track every pending id.
 7. **Unauthenticated** (empty `CODEX_HOME`):
    - `account/read` → `{account:null, requiresOpenaiAuth:true}`
@@ -120,15 +122,15 @@ Observed facts:
 3. Live result: the response arrives in about 0.9 s and the process exits in about 1.7 s, with **no prompt sent and no tokens consumed**. Response (abridged):
    ```json
    {"subscription_type":"pro","rate_limits_available":true,
-    "rate_limits":{"five_hour":{"utilization":2,"resets_at":"2026-10-01T17:30:00.107017+00:00",...},
-                   "seven_day":{"utilization":11,"resets_at":"2026-10-06T15:00:00.107042+00:00",...},
+    "rate_limits":{"five_hour":{"utilization":7,"resets_at":"2026-10-01T18:00:00.214031+00:00",...},
+                   "seven_day":{"utilization":26,"resets_at":"2026-10-07T09:00:00.214057+00:00",...},
                    "seven_day_opus":null,"seven_day_sonnet":null,"seven_day_oauth_apps":null,
                    "seven_day_cowork":null,"tangelo":null, ... ,
-                   "extra_usage":{"is_enabled":false,"monthly_limit":24000,"used_credits":0,
-                                  "utilization":0,"currency":"EUR","decimal_places":2,
+                   "extra_usage":{"is_enabled":false,"monthly_limit":5000,"used_credits":1250,
+                                  "utilization":25,"currency":"USD","decimal_places":2,
                                   "disabled_reason":"out_of_credits",...},
-                   "limits":[{"kind":"session","group":"session","percent":2,...},
-                             {"kind":"weekly_all","group":"weekly","percent":11,...}],
+                   "limits":[{"kind":"session","group":"session","percent":7,...},
+                             {"kind":"weekly_all","group":"weekly","percent":26,...}],
                    "model_scoped":[], ...},
     "behaviors":null}
    ```
@@ -144,7 +146,7 @@ Observed facts:
 11. Undocumented response details:
     - `utilization` is 0–100 (schema text: "Percentage of the window used, 0-100"). It matched `/usage`.
     - `resets_at` is ISO-8601 with microseconds and a `+00:00` offset.
-    - `extra_usage` amounts are in **minor currency units** with `decimal_places` (24000 + 2 → 240.00 EUR). `decimal_places` is not in the described schema.
+    - `extra_usage` amounts are in **minor currency units** with `decimal_places` (5000 + 2 → 50.00 USD). `decimal_places` is not in the described schema.
     - Several codename keys (`tangelo`, `cedar_ember`, …) appear as `null`.
 
 ---
@@ -623,7 +625,7 @@ Field rules:
 `extra_usage` (non-null) → one `CreditBalance`:
 - id `claude_extra_usage`, label `Extra usage`
 - unit `{type:"currency", currency: upper(currency)}` if `currency` matches `/^[A-Za-z]{3}$/`. Otherwise all amounts are `null` plus `ambiguous_units`, and the unit is `{type:"provider_credits"}`.
-- If `decimal_places` is an integer in 0..6 → `used = toDecimal(used_credits, dp)` and `limit = toDecimal(monthly_limit, dp)`, where `toDecimal(24000, 2) === "240.00"` and integer minor units are converted by string math. Otherwise both are `null` plus `ambiguous_units`.
+- If `decimal_places` is an integer in 0..6 → `used = toDecimal(used_credits, dp)` and `limit = toDecimal(monthly_limit, dp)`, where `toDecimal(5000, 2) === "50.00"` and integer minor units are converted by string math. Otherwise both are `null` plus `ambiguous_units`.
 - `balance: null`
 - `usedPercent = utilization`
 - `enabled = is_enabled`, `disabledReason = disabled_reason ?? null`
@@ -862,19 +864,19 @@ Example (`agent-usage --json`, values from 2026-10-01):
       "availability": { "state": "available", "basis": "provider_flag", "reason": null, "exhaustedLimitIds": [] },
       "limits": [
         { "id": "session", "kind": "session", "scope": { "type": "account" }, "label": "5h",
-          "usedPercent": 0, "remainingPercent": 100, "windowMinutes": 300, "windowSource": "reported",
-          "resetsAt": "2026-10-01T18:39:40.000Z", "providerKey": "rateLimits.primary" },
+          "usedPercent": 12, "remainingPercent": 88, "windowMinutes": 300, "windowSource": "reported",
+          "resetsAt": "2026-10-01T19:12:00.000Z", "providerKey": "rateLimits.primary" },
         { "id": "weekly", "kind": "weekly", "scope": { "type": "account" }, "label": "Weekly",
-          "usedPercent": 22, "remainingPercent": 78, "windowMinutes": 10080, "windowSource": "reported",
-          "resetsAt": "2026-10-04T13:09:07.000Z", "providerKey": "rateLimits.secondary" }
+          "usedPercent": 41, "remainingPercent": 59, "windowMinutes": 10080, "windowSource": "reported",
+          "resetsAt": "2026-10-05T08:30:00.000Z", "providerKey": "rateLimits.secondary" }
       ],
       "credits": [
         { "id": "codex_credits", "label": "Credits", "unit": { "type": "provider_credits" },
-          "balance": "452.0439000000", "used": null, "limit": null, "usedPercent": null,
+          "balance": "318.2716000000", "used": null, "limit": null, "usedPercent": null,
           "unlimited": false, "hasCredits": true, "enabled": null, "disabledReason": null,
           "providerKey": "rateLimits.credits" }
       ],
-      "resetCredits": { "availableCount": 2 },
+      "resetCredits": { "availableCount": 3 },
       "analytics": null,
       "errors": [],
       "warnings": []
@@ -889,15 +891,15 @@ Example (`agent-usage --json`, values from 2026-10-01):
       "availability": { "state": "available", "basis": "derived_from_limits", "reason": null, "exhaustedLimitIds": [] },
       "limits": [
         { "id": "session", "kind": "session", "scope": { "type": "account" }, "label": "5h",
-          "usedPercent": 2, "remainingPercent": 98, "windowMinutes": 300, "windowSource": "inferred",
-          "resetsAt": "2026-10-01T17:30:00.107Z", "providerKey": "rate_limits.five_hour" },
+          "usedPercent": 7, "remainingPercent": 93, "windowMinutes": 300, "windowSource": "inferred",
+          "resetsAt": "2026-10-01T18:00:00.214Z", "providerKey": "rate_limits.five_hour" },
         { "id": "weekly", "kind": "weekly", "scope": { "type": "account" }, "label": "Weekly",
-          "usedPercent": 11, "remainingPercent": 89, "windowMinutes": 10080, "windowSource": "inferred",
-          "resetsAt": "2026-10-06T15:00:00.107Z", "providerKey": "rate_limits.seven_day" }
+          "usedPercent": 26, "remainingPercent": 74, "windowMinutes": 10080, "windowSource": "inferred",
+          "resetsAt": "2026-10-07T09:00:00.214Z", "providerKey": "rate_limits.seven_day" }
       ],
       "credits": [
-        { "id": "claude_extra_usage", "label": "Extra usage", "unit": { "type": "currency", "currency": "EUR" },
-          "balance": null, "used": "0.00", "limit": "240.00", "usedPercent": 0,
+        { "id": "claude_extra_usage", "label": "Extra usage", "unit": { "type": "currency", "currency": "USD" },
+          "balance": null, "used": "12.50", "limit": "50.00", "usedPercent": 25,
           "unlimited": null, "hasCredits": null, "enabled": false, "disabledReason": "out_of_credits",
           "providerKey": "rate_limits.extra_usage" }
       ],
@@ -916,15 +918,15 @@ Exact layout. `now` is injectable, and tests run with `TZ=UTC` and a fixed `now`
 
 ```
 CODEX · plus · available
-  5h            0% used   resets today 18:39          (in 4h 59m)
-  Weekly       22% used   resets Sun 04 Oct 13:09     (in 2d 23h)
-  Credits      452.04 credits
-  Resets       2 reset credits available (never used by agent-usage)
+  5h           12% used   resets today 19:12          (in 5h 32m)
+  Weekly       41% used   resets Mon 05 Oct 08:30     (in 3d 18h)
+  Credits      318.27 credits
+  Resets       3 reset credits available (never used by agent-usage)
 
 CLAUDE · pro · available (derived)
-  5h            2% used   resets today 17:30          (in 3h 50m)
-  Weekly       11% used   resets Tue 06 Oct 15:00     (in 5d 1h)
-  Extra usage  off (out_of_credits) · 0.00 / 240.00 EUR
+  5h            7% used   resets today 18:00          (in 4h 20m)
+  Weekly       26% used   resets Wed 07 Oct 09:00     (in 5d 19h)
+  Extra usage  off (out_of_credits) · 12.50 / 50.00 USD
 ```
 
 Header: `<PROVIDER UPPER> · <plan or "unknown plan"> · <state>`.
@@ -936,7 +938,7 @@ Limit rows:
 - Reset time:
   - `today HH:MM` if it falls on the same local date
   - `tomorrow HH:MM`
-  - otherwise `EEE DD MMM HH:MM` (e.g. `Sun 04 Oct 13:09`) in local TZ, 24 h, assembled from `Intl.DateTimeFormat("en-GB", …).formatToParts()` so locale punctuation is not part of the output
+  - otherwise `EEE DD MMM HH:MM` (e.g. `Mon 05 Oct 08:30`) in local TZ, 24 h, assembled from `Intl.DateTimeFormat("en-GB", …).formatToParts()` so locale punctuation is not part of the output
 - Relative time is truncated, not rounded: `(in Xd Yh)` when ≥ 1 day, `(in Xh Ym)` when ≥ 1 hour, `(in Ym)` otherwise, `(now)` if past.
 - `usedPercent:null` → `  ?% used`.
 - Percent color: < 70 default, 70–89 yellow, ≥ 90 red. This is presentation only.
@@ -950,7 +952,7 @@ Scoped limits are listed after `session`/`weekly`, in report order.
 
 Analytics, only with `--analytics`:
 ```
-  Tokens       lifetime 3.10B · peak day 108.43M · last 7 days 12.4M
+  Tokens       lifetime 1.85B · peak day 64.82M · last 7 days 12.4M
 ```
 
 Errors and warnings:
@@ -1005,7 +1007,7 @@ Fixtures are sanitized: ids are replaced with `FIXTURE`, there are no emails, an
 | `codex/ratelimits-reached.json` | primary `usedPercent:100`, `ordinaryUsageAllowed:false`, `rateLimitReachedType:"rate_limit_reached"` |
 | `codex/ratelimits-nullflags.json` | `ordinaryUsageAllowed:null`, secondary 100 % → derived `limited` |
 | `codex/ratelimits-multibucket.json` | `rateLimitsByLimitId` with `codex` plus `codex_other` (`limitName:"GPT-5.x-Codex-Spark"`, `normalModelSlug:"gpt-5.x-codex-spark"`) |
-| `codex/ratelimits-sparse.json` | `primary:null`, secondary only, `credits:null`, `rateLimitResetCredits:null`, `individualLimit:{limit:"100",used:"25",remainingPercent:75,resetsAt:1791119347}` |
+| `codex/ratelimits-sparse.json` | `primary:null`, secondary only, `credits:null`, `rateLimitResetCredits:null`, `individualLimit:{limit:"100",used:"25",remainingPercent:75,resetsAt:1791189000}` |
 | `codex/ratelimits-ms-timestamps.json` | `resetsAt` in milliseconds |
 | `codex/ratelimits-malformed.json` | `rateLimits.primary.usedPercent:"high"`, and the `rateLimits` key missing in a variant |
 | `codex/usage.json` | summary plus 5 daily buckets (unsorted) |
@@ -1396,7 +1398,7 @@ General rules for every milestone:
   - every Claude fixture in Section 13.1
   - `model_scoped` dedupe
   - unknown key warning
-  - extra usage: `"240.00"` / `"0.00"`, and the `ambiguous_units` path
+  - extra usage: `"50.00"` / `"12.50"`, and the `ambiguous_units` path
   - model-scoped exhaustion keeps the state `available` but lists the id
 
 ### M7 — Core and public API

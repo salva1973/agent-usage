@@ -87,7 +87,7 @@ test.each([["--json"], []])("both successful providers use the selected output m
   if (argv.length === 0) {
     expect(output.stdout).toMatch(/^CODEX · /);
     expect(output.stdout).toContain("\n\nCLAUDE · ");
-    expect(output.stdout).toContain("resets today 18:39          (in 4h 59m)");
+    expect(output.stdout).toContain("resets today 19:12          (in 5h 32m)");
     expect(output.stdout).not.toContain("\u001b");
     expect(output.stdout.endsWith("\n")).toBe(true);
     return;

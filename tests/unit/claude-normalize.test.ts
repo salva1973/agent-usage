@@ -22,13 +22,13 @@ test("pro fixture matches the complete Claude example in SPEC.md §12.2", () => 
     account: { plan: "pro", authMode: "claude.ai" },
     availability: { state: "available", basis: "derived_from_limits", reason: null, exhaustedLimitIds: [] },
     limits: [
-      { id: "session", kind: "session", scope: { type: "account" }, label: "5h", usedPercent: 2, remainingPercent: 98,
-        windowMinutes: 300, windowSource: "inferred", resetsAt: "2026-10-01T17:30:00.107Z", providerKey: "rate_limits.five_hour" },
-      { id: "weekly", kind: "weekly", scope: { type: "account" }, label: "Weekly", usedPercent: 11, remainingPercent: 89,
-        windowMinutes: 10080, windowSource: "inferred", resetsAt: "2026-10-06T15:00:00.107Z", providerKey: "rate_limits.seven_day" },
+      { id: "session", kind: "session", scope: { type: "account" }, label: "5h", usedPercent: 7, remainingPercent: 93,
+        windowMinutes: 300, windowSource: "inferred", resetsAt: "2026-10-01T18:00:00.214Z", providerKey: "rate_limits.five_hour" },
+      { id: "weekly", kind: "weekly", scope: { type: "account" }, label: "Weekly", usedPercent: 26, remainingPercent: 74,
+        windowMinutes: 10080, windowSource: "inferred", resetsAt: "2026-10-07T09:00:00.214Z", providerKey: "rate_limits.seven_day" },
     ],
-    credits: [{ id: "claude_extra_usage", label: "Extra usage", unit: { type: "currency", currency: "EUR" },
-      balance: null, used: "0.00", limit: "240.00", usedPercent: 0, unlimited: null, hasCredits: null,
+    credits: [{ id: "claude_extra_usage", label: "Extra usage", unit: { type: "currency", currency: "USD" },
+      balance: null, used: "12.50", limit: "50.00", usedPercent: 25, unlimited: null, hasCredits: null,
       enabled: false, disabledReason: "out_of_credits", providerKey: "rate_limits.extra_usage" }],
     resetCredits: null, analytics: null, errors: [], warnings: [],
   });
@@ -65,7 +65,7 @@ test("all named scoped windows, model_scoped dedupe and unknown windows have the
   expect(report.limits[6]).toMatchObject({ scope: { type: "model", model: "fable" }, label: "Weekly (Fable)", windowSource: "inferred", windowMinutes: 10080 });
   expect(report.limits[7]).toEqual({ id: "other:nimbus_quill", kind: "other", scope: { type: "bucket", bucket: "nimbus_quill", name: null, model: null },
     label: "nimbus_quill", usedPercent: 5, remainingPercent: 95, windowMinutes: null, windowSource: "unknown",
-    resetsAt: "2026-10-06T15:00:00.107Z", providerKey: "rate_limits.nimbus_quill" });
+    resetsAt: "2026-10-07T09:00:00.214Z", providerKey: "rate_limits.nimbus_quill" });
   expect(report.warnings.map((issue) => issue.code)).toEqual(["unknown_limit_key"]);
   expect(report.availability).toEqual({ state: "available", basis: "derived_from_limits", reason: null, exhaustedLimitIds: ["weekly:model:opus"] });
 });
@@ -78,30 +78,30 @@ test("account exhaustion limits availability", () => {
 
 test("ambiguous extra-usage units never fabricate currency or amounts", () => {
   const report = normalize(fixture("get-usage-bad-extra.json"));
-  expect(report.credits[0]).toMatchObject({ unit: { type: "provider_credits" }, used: null, limit: null, balance: null, usedPercent: 0 });
+  expect(report.credits[0]).toMatchObject({ unit: { type: "provider_credits" }, used: null, limit: null, balance: null, usedPercent: 25 });
   expect(report.warnings.map((issue) => issue.code)).toEqual(["ambiguous_units"]);
   expect(report.status).toBe("ok");
 });
 
 test.each([undefined, -1, 7, 1.5])("invalid decimal_places %s leaves currency amounts unknown", (decimal_places) => {
-  const report = normalize(withLimits({ extra_usage: { is_enabled: true, monthly_limit: 24000, used_credits: 12, currency: "eur", decimal_places } }));
-  expect(report.credits[0]).toMatchObject({ unit: { type: "currency", currency: "EUR" }, used: null, limit: null });
+  const report = normalize(withLimits({ extra_usage: { is_enabled: true, monthly_limit: 5000, used_credits: 12, currency: "usd", decimal_places } }));
+  expect(report.credits[0]).toMatchObject({ unit: { type: "currency", currency: "USD" }, used: null, limit: null });
   expect(report.warnings[0]?.code).toBe("ambiguous_units");
 });
 
-test.each([null, "EURO", "", "123"])("invalid currency %s does not expose amounts", (currency) => {
-  const report = normalize(withLimits({ extra_usage: { is_enabled: false, monthly_limit: 24000, used_credits: 0, currency, decimal_places: 2 } }));
+test.each([null, "USDO", "", "123"])("invalid currency %s does not expose amounts", (currency) => {
+  const report = normalize(withLimits({ extra_usage: { is_enabled: false, monthly_limit: 5000, used_credits: 0, currency, decimal_places: 2 } }));
   expect(report.credits[0]).toMatchObject({ unit: { type: "provider_credits" }, used: null, limit: null });
   expect(report.warnings[0]?.code).toBe("ambiguous_units");
 });
 
-test.each([[0, "24000", "0"], [2, "240.00", "0.00"], [6, "0.024000", "0.000000"]])("valid decimal_places %s uses string money conversion", (decimal_places, limit, used) => {
-  const report = normalize(withLimits({ extra_usage: { is_enabled: true, monthly_limit: 24000, used_credits: 0, currency: "usd", decimal_places } }));
+test.each([[0, "5000", "1250"], [2, "50.00", "12.50"], [6, "0.005000", "0.001250"]])("valid decimal_places %s uses string money conversion", (decimal_places, limit, used) => {
+  const report = normalize(withLimits({ extra_usage: { is_enabled: true, monthly_limit: 5000, used_credits: 1250, currency: "usd", decimal_places } }));
   expect(report.credits[0]).toMatchObject({ unit: { type: "currency", currency: "USD" }, used, limit, enabled: true, disabledReason: null });
 });
 
 test.each([[Number.MAX_SAFE_INTEGER + 1, "precision_loss"], [-1, "invalid_number"], [1.25, "invalid_number"]])("unsafe monetary count %s is unknown", (value, code) => {
-  const report = normalize(withLimits({ extra_usage: { is_enabled: true, monthly_limit: value, used_credits: null, currency: "EUR", decimal_places: 2 } }));
+  const report = normalize(withLimits({ extra_usage: { is_enabled: true, monthly_limit: value, used_credits: null, currency: "USD", decimal_places: 2 } }));
   expect(report.credits[0]?.limit).toBeNull();
   expect(report.warnings.map((issue) => issue.code)).toContain(code);
 });
@@ -113,7 +113,7 @@ test.each([0.123456, 125, -5, null])("utilization %s remains on the 0–100 scal
 });
 
 test.each([
-  ["2026-10-01T19:30:00.107999+02:00", "2026-10-01T17:30:00.107Z", null],
+  ["2026-10-01T20:00:00.214999+02:00", "2026-10-01T18:00:00.214Z", null],
   ["not-a-time", null, "invalid_timestamp"], [null, null, null],
 ])("timestamp %s converts to UTC milliseconds or emits a warning", (resets_at, expected, code) => {
   const report = normalize(withLimits({ five_hour: { utilization: 2, resets_at } }));

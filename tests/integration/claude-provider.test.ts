@@ -27,9 +27,9 @@ test.each(["ok", "ok-noise", "pii-initialize", "init-error", "usage-before-init"
   expect(report.source.providerVersion).toBe("2.1.286");
   expect(report.account).toEqual({ plan: "pro", authMode: "claude.ai" });
   expect(report.limits.map((limit) => [limit.id, limit.usedPercent, limit.remainingPercent, limit.resetsAt])).toEqual([
-    ["session", 2, 98, "2026-10-01T17:30:00.107Z"], ["weekly", 11, 89, "2026-10-06T15:00:00.107Z"],
+    ["session", 7, 93, "2026-10-01T18:00:00.214Z"], ["weekly", 26, 74, "2026-10-07T09:00:00.214Z"],
   ]);
-  expect(report.credits[0]).toMatchObject({ limit: "240.00", used: "0.00", unit: { type: "currency", currency: "EUR" } });
+  expect(report.credits[0]).toMatchObject({ limit: "50.00", used: "12.50", unit: { type: "currency", currency: "USD" } });
   expect(report.errors).toEqual([]);
   expect(report.warnings).toEqual([]);
   const records = await fake.records();

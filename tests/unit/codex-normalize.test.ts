@@ -16,14 +16,14 @@ const expectedBase = {
   account: { plan: "plus", authMode: "chatgpt" },
   availability: { state: "available", basis: "provider_flag", reason: null, exhaustedLimitIds: [] },
   limits: [
-    { id: "session", kind: "session", scope: { type: "account" }, label: "5h", usedPercent: 0, remainingPercent: 100,
-      windowMinutes: 300, windowSource: "reported", resetsAt: "2026-10-01T18:39:40.000Z", providerKey: "rateLimits.primary" },
-    { id: "weekly", kind: "weekly", scope: { type: "account" }, label: "Weekly", usedPercent: 22, remainingPercent: 78,
-      windowMinutes: 10080, windowSource: "reported", resetsAt: "2026-10-04T13:09:07.000Z", providerKey: "rateLimits.secondary" },
+    { id: "session", kind: "session", scope: { type: "account" }, label: "5h", usedPercent: 12, remainingPercent: 88,
+      windowMinutes: 300, windowSource: "reported", resetsAt: "2026-10-01T19:12:00.000Z", providerKey: "rateLimits.primary" },
+    { id: "weekly", kind: "weekly", scope: { type: "account" }, label: "Weekly", usedPercent: 41, remainingPercent: 59,
+      windowMinutes: 10080, windowSource: "reported", resetsAt: "2026-10-05T08:30:00.000Z", providerKey: "rateLimits.secondary" },
   ],
-  credits: [{ id: "codex_credits", label: "Credits", unit: { type: "provider_credits" }, balance: "452.0439000000",
+  credits: [{ id: "codex_credits", label: "Credits", unit: { type: "provider_credits" }, balance: "318.2716000000",
     used: null, limit: null, usedPercent: null, unlimited: false, hasCredits: true, enabled: null, disabledReason: null, providerKey: "rateLimits.credits" }],
-  resetCredits: { availableCount: 2 }, analytics: null, errors: [], warnings: [],
+  resetCredits: { availableCount: 3 }, analytics: null, errors: [], warnings: [],
 } satisfies UntimedProviderReport;
 
 function validate(report: UntimedProviderReport): void {
@@ -75,7 +75,7 @@ test("sparse fixture skips null windows, omits unknown credits, and reports spen
   expect(normalize("ratelimits-sparse.json")).toEqual({
     ...expectedBase, credits: [], resetCredits: null, limits: [expectedBase.limits[1],
       { id: "spend_control", kind: "spend_control", scope: { type: "account" }, label: "Spend cap", usedPercent: 25, remainingPercent: 75,
-        windowMinutes: null, windowSource: "unknown", resetsAt: "2026-10-04T13:09:07.000Z", providerKey: "individualLimit" },
+        windowMinutes: null, windowSource: "unknown", resetsAt: "2026-10-05T08:30:00.000Z", providerKey: "individualLimit" },
     ],
   });
 });
@@ -91,7 +91,7 @@ test("analytics fixture maps the summary, sorts daily buckets, ignores thread da
   const before = structuredClone(usage);
   expect(normalize("ratelimits-plus.json", { analytics: usage })).toEqual({
     ...expectedBase, analytics: {
-      lifetimeTokens: 3103172254, peakDailyTokens: 108430000, longestRunningTurnSec: 132, currentStreakDays: 5, longestStreakDays: 12,
+      lifetimeTokens: 1846203917, peakDailyTokens: 64820000, longestRunningTurnSec: 132, currentStreakDays: 5, longestStreakDays: 12,
       daily: [
         { date: "2026-09-27", tokens: 2000 }, { date: "2026-09-28", tokens: 4000 }, { date: "2026-09-29", tokens: 5000 },
         { date: "2026-09-30", tokens: 3000 }, { date: "2026-10-01", tokens: 1000 },
@@ -123,7 +123,7 @@ describe("raw schemas and privacy", () => {
     expect(GetAccountResponseSchema.parse(fixture("account-none.json"))).toEqual({ account: null });
     expect(GetAccountResponseSchema.parse(fixture("account-apikey.json"))).toEqual({ account: { type: "apiKey", planType: undefined } });
     expect(GetAccountRateLimitsResponseSchema.parse(fixture("ratelimits-plus.json"))).not.toHaveProperty("accountId");
-    expect(GetAccountRateLimitsResponseSchema.parse(fixture("ratelimits-plus.json")).rateLimitResetCredits).toEqual({ availableCount: 2 });
+    expect(GetAccountRateLimitsResponseSchema.parse(fixture("ratelimits-plus.json")).rateLimitResetCredits).toEqual({ availableCount: 3 });
     expect(fixture("error-unauth.json")).toEqual({ code: -32600, message: "codex account authentication required to read rate limits" });
   });
   test("nullable and optional protocol fields stay unknown, while unknown fields are accepted", () => {
@@ -226,11 +226,11 @@ describe("windows, numbers and ids", () => {
   test("an unmatched limitId uses codex as the default", () => {
     const raw = GetAccountRateLimitsResponseSchema.parse(fixture("ratelimits-multibucket.json"));
     raw.rateLimits.limitId = "missing";
-    expect(normalizeCodexUsage(raw, info).limits[0]?.usedPercent).toBe(0);
+    expect(normalizeCodexUsage(raw, info).limits[0]?.usedPercent).toBe(12);
   });
 });
 
-test.each(["452.0439000000", "-1.000", "000.10"])("credit balance %s is verbatim opaque provider credits", (balance) => {
+test.each(["318.2716000000", "-1.000", "000.10"])("credit balance %s is verbatim opaque provider credits", (balance) => {
   const raw = GetAccountRateLimitsResponseSchema.parse(fixture("ratelimits-plus.json"));
   raw.rateLimits.credits!.balance = balance;
   const report = normalizeCodexUsage(raw, info);

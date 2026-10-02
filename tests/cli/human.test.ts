@@ -11,15 +11,15 @@ import { fixture as claudeFixture } from "../helpers/claude.js";
 const now = new Date("2026-10-01T13:40:00Z");
 const opts = { color: false, debug: false, now };
 const codexPlain = `CODEX · plus · available
-  5h            0% used   resets today 18:39          (in 4h 59m)
-  Weekly       22% used   resets Sun 04 Oct 13:09     (in 2d 23h)
-  Credits      452.04 credits
-  Resets       2 reset credits available (never used by agent-usage)
+  5h           12% used   resets today 19:12          (in 5h 32m)
+  Weekly       41% used   resets Mon 05 Oct 08:30     (in 3d 18h)
+  Credits      318.27 credits
+  Resets       3 reset credits available (never used by agent-usage)
 `;
 const claudePlain = `CLAUDE · pro · available (derived)
-  5h            2% used   resets today 17:30          (in 3h 50m)
-  Weekly       11% used   resets Tue 06 Oct 15:00     (in 5d 1h)
-  Extra usage  off (out_of_credits) · 0.00 / 240.00 EUR
+  5h            7% used   resets today 18:00          (in 4h 20m)
+  Weekly       26% used   resets Wed 07 Oct 09:00     (in 5d 19h)
+  Extra usage  off (out_of_credits) · 12.50 / 50.00 USD
 `;
 
 beforeEach(() => vi.stubEnv("TZ", "UTC"));
@@ -58,10 +58,10 @@ test("authentication error matches the exact block and hint indentation", () => 
 
 test("Codex limited fixture renders its explicit reason", () => {
   expect(renderHuman(report(codex("ratelimits-reached.json")), opts)).toBe(`CODEX · plus · LIMITED (rate_limit_reached)
-  5h          100% used   resets today 18:39          (in 4h 59m)
-  Weekly       22% used   resets Sun 04 Oct 13:09     (in 2d 23h)
-  Credits      452.04 credits
-  Resets       2 reset credits available (never used by agent-usage)
+  5h          100% used   resets today 19:12          (in 5h 32m)
+  Weekly       41% used   resets Mon 05 Oct 08:30     (in 3d 18h)
+  Credits      318.27 credits
+  Resets       3 reset credits available (never used by agent-usage)
 `);
 });
 
@@ -70,15 +70,15 @@ test("Claude scoped fixture keeps scoped rows after the canonical windows", () =
   const limitWidth = Math.max(12, ...provider.limits.map((limit) => limit.label.length + 1));
   const infoWidth = Math.max(13, limitWidth + 1, ...provider.credits.map((credit) => credit.label.length + 2));
   const literal = `CLAUDE · max · available (derived)
-  5h                    2% used   resets today 17:30          (in 3h 50m)
-  Weekly               11% used   resets Tue 06 Oct 15:00     (in 5d 1h)
-  Weekly (Opus)       100% used   resets Tue 06 Oct 15:00     (in 5d 1h)
-  Weekly (Sonnet)      20% used   resets Tue 06 Oct 15:00     (in 5d 1h)
-  Weekly (OAuth apps)  12% used   resets Tue 06 Oct 15:00     (in 5d 1h)
-  Weekly (Cowork)       9% used   resets Tue 06 Oct 15:00     (in 5d 1h)
-  Weekly (Fable)       40% used   resets Tue 06 Oct 15:00     (in 5d 1h)
-  nimbus_quill          5% used   resets Tue 06 Oct 15:00     (in 5d 1h)
-  Extra usage          off (out_of_credits) · 0.00 / 240.00 EUR
+  5h                    7% used   resets today 18:00          (in 4h 20m)
+  Weekly               26% used   resets Wed 07 Oct 09:00     (in 5d 19h)
+  Weekly (Opus)       100% used   resets Wed 07 Oct 09:00     (in 5d 19h)
+  Weekly (Sonnet)      20% used   resets Wed 07 Oct 09:00     (in 5d 19h)
+  Weekly (OAuth apps)  12% used   resets Wed 07 Oct 09:00     (in 5d 19h)
+  Weekly (Cowork)       9% used   resets Wed 07 Oct 09:00     (in 5d 19h)
+  Weekly (Fable)       40% used   resets Wed 07 Oct 09:00     (in 5d 19h)
+  nimbus_quill          5% used   resets Wed 07 Oct 09:00     (in 5d 19h)
+  Extra usage          off (out_of_credits) · 12.50 / 50.00 USD
 `;
   // Verify the handoff's literal against its width rule before using it as the oracle.
   expect({ limitWidth, infoWidth }).toEqual({ limitWidth: 20, infoWidth: 21 });
@@ -86,7 +86,7 @@ test("Claude scoped fixture keeps scoped rows after the canonical windows", () =
   provider.limits.forEach((limit, index) => {
     expect(lines[index + 1]!.startsWith(`  ${limit.label.padEnd(limitWidth)}${String(limit.usedPercent).padStart(3)}% used   `)).toBe(true);
   });
-  expect(lines.at(-2)).toBe(`  ${"Extra usage".padEnd(infoWidth)}off (out_of_credits) · 0.00 / 240.00 EUR`);
+  expect(lines.at(-2)).toBe(`  ${"Extra usage".padEnd(infoWidth)}off (out_of_credits) · 12.50 / 50.00 USD`);
   expect(renderHuman(report(provider), opts)).toBe(literal);
 });
 
@@ -108,8 +108,8 @@ test("a single forty-character limit label always leaves a separating space", ()
   const lines = renderHuman(report(provider), opts).split("\n");
   expect(lines[1]).toBe(`  ${label} 100% used`);
   expect(lines[1]!.indexOf("%")).toBe(46);
-  expect(lines[2]).toBe(`  Credits${" ".repeat(35)}452.04 credits`);
-  expect(lines[3]).toBe(`  Resets${" ".repeat(36)}2 reset credits available (never used by agent-usage)`);
+  expect(lines[2]).toBe(`  Credits${" ".repeat(35)}318.27 credits`);
+  expect(lines[3]).toBe(`  Resets${" ".repeat(36)}3 reset credits available (never used by agent-usage)`);
 });
 
 test("long credit labels widen all info rows and leave limit columns at their minimum", () => {
@@ -122,21 +122,21 @@ test("long credit labels widen all info rows and leave limit columns at their mi
   const lines = renderHuman(report(provider), opts).split("\n");
   expect(lines.slice(1, 3).map((line) => line.indexOf("%"))).toEqual([17, 17]);
   expect(lines.slice(3, 7)).toEqual([
-    `  ${label}  452.04 credits`,
-    `  Extra usage${" ".repeat(31)}off (out_of_credits) · 0.00 / 240.00 EUR`,
-    `  Resets${" ".repeat(36)}2 reset credits available (never used by agent-usage)`,
+    `  ${label}  318.27 credits`,
+    `  Extra usage${" ".repeat(31)}off (out_of_credits) · 12.50 / 50.00 USD`,
+    `  Resets${" ".repeat(36)}3 reset credits available (never used by agent-usage)`,
     `  Tokens${" ".repeat(36)}lifetime 0 · peak day ? · last 7 days 0`,
   ]);
   expect(lines.slice(3, 7).map((line) => line.slice(44))).toEqual([
-    "452.04 credits", "off (out_of_credits) · 0.00 / 240.00 EUR",
-    "2 reset credits available (never used by agent-usage)", "lifetime 0 · peak day ? · last 7 days 0",
+    "318.27 credits", "off (out_of_credits) · 12.50 / 50.00 USD",
+    "3 reset credits available (never used by agent-usage)", "lifetime 0 · peak day ? · last 7 days 0",
   ]);
 });
 
 test("scoped widths are local to their provider block", () => {
   const output = renderHuman(report(claude("get-usage-max-scoped.json"), codex()), opts);
   const [scoped, short] = output.trimEnd().split("\n\n");
-  expect(scoped!.split("\n")[1]).toBe("  5h                    2% used   resets today 17:30          (in 3h 50m)");
+  expect(scoped!.split("\n")[1]).toBe("  5h                    7% used   resets today 18:00          (in 4h 20m)");
   expect(`${short}\n`).toBe(codexPlain);
 });
 
@@ -153,8 +153,8 @@ test("info-only providers retain the minimum width", () => {
   const provider = codex();
   provider.limits = [];
   expect(renderHuman(report(provider), opts)).toBe(`CODEX · plus · available
-  Credits      452.04 credits
-  Resets       2 reset credits available (never used by agent-usage)
+  Credits      318.27 credits
+  Resets       3 reset credits available (never used by agent-usage)
 `);
 });
 
@@ -182,7 +182,7 @@ test("analytics fixture renders compact counts and sums recent daily buckets", (
   provider.analytics = normalizeCodexUsage(GetAccountRateLimitsResponseSchema.parse(codexFixture("ratelimits-plus.json")), {
     account: null, providerVersion: null, analytics: GetAccountTokenUsageResponseSchema.parse(codexFixture("usage.json")),
   }).analytics;
-  expect(renderHuman(report(provider), opts)).toBe(`${codexPlain}  Tokens       lifetime 3.10B · peak day 108.43M · last 7 days 15.0k\n`);
+  expect(renderHuman(report(provider), opts)).toBe(`${codexPlain}  Tokens       lifetime 1.85B · peak day 64.82M · last 7 days 15.0k\n`);
 });
 
 test.each(["UTC", "Europe/Rome"])("analytics includes the local six-day cutoff in %s", (timezone) => {
@@ -267,7 +267,7 @@ test("canonical windows sort first and all other limits retain report order", ()
   provider.limits = [others[1]!, weekly!, others[0]!, session!, ...others.slice(2)];
   const output = renderHuman(report(provider), opts);
   expect(output.split("\n").slice(1, 5).map((line) => line.trimStart().split("% used")[0])).toEqual([
-    "5h                    2", "Weekly               11", "Weekly (Sonnet)      20", "Weekly (Opus)       100",
+    "5h                    7", "Weekly               26", "Weekly (Sonnet)      20", "Weekly (Opus)       100",
   ]);
 });
 
@@ -302,7 +302,7 @@ test.each([
 });
 
 test.each([
-  [{ enabled: true, disabledReason: null }, "on · 0.00 / 240.00 EUR"],
+  [{ enabled: true, disabledReason: null }, "on · 12.50 / 50.00 USD"],
   [{ enabled: null, disabledReason: null, used: null }, "?"],
   [{ enabled: false, disabledReason: "disabled", limit: null }, "off (disabled)"],
 ])("currency credits display %j with no unknown amounts invented", (patch, text) => {
@@ -315,8 +315,8 @@ test("multiple credits retain report order before reset credits and analytics", 
   const provider = codex();
   provider.credits.push({ ...claude().credits[0]!, label: "Extra usage" });
   expect(renderHuman(report(provider), opts).split("\n").slice(3, 6)).toEqual([
-    "  Credits      452.04 credits", "  Extra usage  off (out_of_credits) · 0.00 / 240.00 EUR",
-    "  Resets       2 reset credits available (never used by agent-usage)",
+    "  Credits      318.27 credits", "  Extra usage  off (out_of_credits) · 12.50 / 50.00 USD",
+    "  Resets       3 reset credits available (never used by agent-usage)",
   ]);
 });
 
