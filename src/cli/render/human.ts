@@ -1,17 +1,20 @@
-import type { CreditBalance, ProviderReport, RateLimit, UsageReport } from "../../index.js";
+import type { CreditBalance, ProviderId, ProviderReport, RateLimit, UsageReport } from "../../index.js";
+import type { AnsiStyle } from "./format.js";
 import { colorText, formatCompact, formatLocalDate, formatLocalTime, formatPercent, formatRelativeTime } from "./format.js";
 
 export interface HumanRenderOptions { color: boolean; debug: boolean; now: Date }
 
+const providerColors: Record<ProviderId, AnsiStyle> = { codex: "cyan", claude: "magenta" };
+
 function header(provider: ProviderReport, color: boolean): string {
-  const name = provider.provider.toUpperCase();
-  if (provider.status === "error") return colorText(name, color, "red", "bold") + colorText(" · error", color, "red");
+  const name = colorText(provider.provider.toUpperCase(), color, "bold", providerColors[provider.provider]);
+  if (provider.status === "error") return name + colorText(" · error", color, "red");
   const availability = provider.availability;
   const state = availability.state === "limited"
     ? colorText(`LIMITED${availability.reason === null ? "" : ` (${availability.reason})`}`, color, "red", "bold")
     : availability.state === "unknown" ? colorText("status unknown", color, "yellow") : "available";
   const derived = availability.basis === "derived_from_limits" ? colorText(" (derived)", color, "dim") : "";
-  return `${colorText(name, color, "bold")} · ${provider.account?.plan ?? "unknown plan"} · ${state}${derived}`;
+  return `${name} · ${provider.account?.plan ?? "unknown plan"} · ${state}${derived}`;
 }
 
 function limitRow(limit: RateLimit, opts: HumanRenderOptions, width: number): string {

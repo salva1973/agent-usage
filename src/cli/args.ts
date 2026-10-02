@@ -9,6 +9,7 @@ export interface CliOptions {
   timeoutMs: number;
   noColor: boolean;
   debug: boolean;
+  demo: boolean;
 }
 
 export type CliArgsResult = { ok: true; options: CliOptions } | { ok: false; message: string };
@@ -21,6 +22,7 @@ Options:
   --timeout <sec>     Per-provider timeout in seconds (default 20, min 1)
   --no-color          Disable ANSI colors (also: NO_COLOR env, non-TTY stdout)
   --debug             Diagnostic log lines to stderr (redacted; never payload values)
+  --demo              Print synthetic demo data (no providers are contacted)
   -h, --help
   -V, --version
 `;
@@ -30,7 +32,7 @@ export function parseCliArgs(argv: string[]): CliArgsResult {
   try {
     const { values, positionals } = parseArgs({ args: argv, strict: true, allowPositionals: true, options: {
       json: { type: "boolean" }, analytics: { type: "boolean" }, timeout: { type: "string" },
-      "no-color": { type: "boolean" }, debug: { type: "boolean" },
+      "no-color": { type: "boolean" }, debug: { type: "boolean" }, demo: { type: "boolean" },
       help: { type: "boolean", short: "h" }, version: { type: "boolean", short: "V" },
     } });
     const providers: ProviderId[] = [];
@@ -47,7 +49,7 @@ export function parseCliArgs(argv: string[]): CliArgsResult {
       action: values.help ? "help" : values.version ? "version" : "fetch",
       providers: providers.length === 0 ? ["codex", "claude"] : providers,
       json: values.json ?? false, includeAnalytics: values.analytics ?? false, timeoutMs: seconds * 1000,
-      noColor: values["no-color"] ?? false, debug: values.debug ?? false,
+      noColor: values["no-color"] ?? false, debug: values.debug ?? false, demo: values.demo ?? false,
     } };
   } catch (error: unknown) {
     if (error instanceof Error && "code" in error) {

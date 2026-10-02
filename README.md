@@ -42,6 +42,7 @@ Options:
   --timeout <sec>     Per-provider timeout in seconds (default 20, min 1)
   --no-color          Disable ANSI colors (also: NO_COLOR env, non-TTY stdout)
   --debug             Diagnostic log lines to stderr (redacted; never payload values)
+  --demo              Print synthetic demo data (no providers are contacted)
   -h, --help
   -V, --version
 ```
@@ -71,11 +72,21 @@ CLAUDE · pro · available (derived)
   Extra usage  off (out_of_credits) · 12.50 / 50.00 USD
 ```
 
-Human reset times use the caller's local timezone. Piped output has no ANSI colors; `--no-color` or nonempty `NO_COLOR` also disables them. `--watch` and `--raw` are unavailable in v1 and produce usage errors.
+Human reset times use the caller's local timezone. Provider headings are bold cyan for Codex and bold magenta for Claude. Colors appear only on a TTY and never in JSON; `--no-color` or nonempty `NO_COLOR` disables them. `--watch` and `--raw` are unavailable in v1 and produce usage errors.
+
+### Demo mode
+
+```sh
+agent-usage --demo
+agent-usage --demo --json
+agent-usage --demo --no-color
+```
+
+**All values printed by `--demo` are synthetic.** No provider is contacted, no binaries are run, and no credentials or network are used. Demo JSON carries a `demo_data` warning on every provider; human output shows warnings with `--debug`. Times are relative to the current clock. Provider selection and `--analytics` work as usual with synthetic data.
 
 ## Polling guidance
 
-Each invocation performs one fetch and prints one report. Callers own the interval and **should not poll more often than every 30 seconds**. This loop waits 30 seconds after each completed invocation, so fetches do not overlap:
+Each invocation performs at most one fetch and prints one report; `--demo` performs none. Callers own the interval and **should not poll more often than every 30 seconds**. This loop waits 30 seconds after each completed invocation, so fetches do not overlap:
 
 ```sh
 while true; do

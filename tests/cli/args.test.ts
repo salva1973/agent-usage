@@ -7,7 +7,7 @@ import { renderJson } from "../../src/cli/render/json.js";
 test("defaults select both providers with a twenty-second timeout", () => {
   expect(parseCliArgs([])).toEqual({ ok: true, options: {
     action: "fetch", providers: ["codex", "claude"], json: false, includeAnalytics: false,
-    timeoutMs: 20000, noColor: false, debug: false,
+    timeoutMs: 20000, noColor: false, debug: false, demo: false,
   } });
 });
 
@@ -33,7 +33,7 @@ test("options may surround providers without mutating argv", () => {
   const argv = ["--debug", "claude", "--json", "codex", "--analytics", "--no-color", "--timeout", "30"];
   const original = [...argv];
   expect(parseCliArgs(argv)).toEqual({ ok: true, options: { action: "fetch", providers: ["claude", "codex"],
-    json: true, includeAnalytics: true, timeoutMs: 30000, noColor: true, debug: true } });
+    json: true, includeAnalytics: true, timeoutMs: 30000, noColor: true, debug: true, demo: false } });
   expect(argv).toEqual(original);
 });
 
@@ -81,4 +81,11 @@ test("JSON rendering uses two-space indentation and exactly one trailing newline
   const input = report(["ok"]);
   expect(renderJson(input)).toBe(`${JSON.stringify(input, null, 2)}\n`);
   expect(JSON.parse(renderJson(input))).toEqual(input);
+});
+
+test("demo selects the full default options with synthetic mode enabled", () => {
+  expect(parseCliArgs(["--demo"])).toEqual({ ok: true, options: {
+    action: "fetch", providers: ["codex", "claude"], json: false, includeAnalytics: false,
+    timeoutMs: 20000, noColor: false, debug: false, demo: true,
+  } });
 });

@@ -1,6 +1,6 @@
-export type AnsiStyle = "bold" | "dim" | "red" | "yellow";
+export type AnsiStyle = "bold" | "dim" | "red" | "yellow" | "cyan" | "magenta";
 
-const ansiCodes: Record<AnsiStyle, string> = { bold: "\u001b[1m", dim: "\u001b[2m", red: "\u001b[31m", yellow: "\u001b[33m" };
+const ansiCodes: Record<AnsiStyle, string> = { bold: "\u001b[1m", dim: "\u001b[2m", red: "\u001b[31m", yellow: "\u001b[33m", cyan: "\u001b[36m", magenta: "\u001b[35m" };
 
 /** Apply the requested ANSI styles only when color output is enabled. */
 export function colorText(text: string, color: boolean, ...styles: AnsiStyle[]): string {

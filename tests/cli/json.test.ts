@@ -162,7 +162,7 @@ test.each([["--raw"], ["--watch"], ["--watch", "60"], ["--timeout", "0"], ["bogu
   },
 );
 
-test.each([["--help", HELP_TEXT], ["-h", HELP_TEXT], ["--version", "0.1.0\n"], ["-V", "0.1.0\n"]])(
+test.each([["--help", HELP_TEXT], ["-h", HELP_TEXT], ["--version", `${JSON.parse(readFileSync(new URL("../../package.json", import.meta.url), "utf8")).version}\n`], ["-V", `${JSON.parse(readFileSync(new URL("../../package.json", import.meta.url), "utf8")).version}\n`]])(
   "%s prints exact output without starting any fake", async (argument, expected) => {
     const { env, codex, claude } = await setup();
     const output = await start([argument], env).output;

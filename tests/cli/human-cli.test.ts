@@ -73,7 +73,7 @@ test.each([
   expect(output.code).toBe(0);
   expect(output.stderr).toBe("");
   expect(output.stdout.includes("\u001b")).toBe(color);
-  if (color) expect(output.stdout).toContain("\u001b[1mCODEX\u001b[0m");
+  if (color) expect(output.stdout).toContain("\u001b[1m\u001b[36mCODEX\u001b[0m");
 });
 
 test("human mode preserves requested provider order", async () => {

@@ -118,3 +118,23 @@ test("application source uses named exports and no explicit any types", () => {
 // SPEC §13.6's frozen Codex allowlist and mutation-before-write assertions are
 // already covered by tests/integration/codex-client.test.ts; keep that test
 // unchanged rather than duplicating it here.
+
+test("demo data is pure and imports only public API types", () => {
+  const demo = sources.find((source) => source.path === join(root, "cli/demo.ts"));
+  expect(demo).toBeDefined();
+  if (demo === undefined) return;
+  for (const forbidden of ["node:", "process.", "Date.now", "Math.random", "spawn", "fetch(", "readFile", "fixtures",
+    "getUsage", "getCodexUsage", "getClaudeUsage"]) expect(demo.text).not.toContain(forbidden);
+  walk(demo.ast, (node) => {
+    if (ts.isImportDeclaration(node)) {
+      expect(node.importClause?.isTypeOnly).toBe(true);
+      expect(ts.isStringLiteral(node.moduleSpecifier) && node.moduleSpecifier.text).toBe("../index.js");
+    }
+    if (ts.isImportEqualsDeclaration(node)) expect(node.isTypeOnly).toBe(true);
+    if (ts.isExportDeclaration(node) && node.moduleSpecifier !== undefined) expect(node.isTypeOnly).toBe(true);
+    if (ts.isCallExpression(node)) {
+      expect(node.expression.kind === ts.SyntaxKind.ImportKeyword).toBe(false);
+      expect(ts.isIdentifier(node.expression) && node.expression.text === "require").toBe(false);
+    }
+  });
+});

@@ -337,7 +337,7 @@ test("color styles headers, presentation thresholds and derived annotations", ()
   provider.limits[1]!.remainingPercent = 10;
   const input = report(provider);
   const output = renderHuman(input, { ...opts, color: true });
-  expect(output).toContain("\u001b[1mCLAUDE\u001b[0m");
+  expect(output).toContain("\u001b[1m\u001b[35mCLAUDE\u001b[0m");
   expect(output).toContain("\u001b[2m (derived)\u001b[0m");
   expect(output).toContain("\u001b[33m 70%\u001b[0m used");
   expect(output).toContain("\u001b[31m 90%\u001b[0m used");
@@ -366,6 +366,21 @@ test("limited and unknown headers, partial issues, errors and warnings get their
   expect(output).toContain("\u001b[33m  ! analytics_failed  Unavailable.\u001b[0m");
   expect(output).toContain("\u001b[2m  · precision_loss  Count omitted.\u001b[0m");
   const error = renderHuman(report(failed()), { ...opts, color: true });
-  expect(error).toContain("\u001b[31m\u001b[1mCLAUDE\u001b[0m\u001b[31m · error\u001b[0m");
+  expect(error).toContain("\u001b[1m\u001b[35mCLAUDE\u001b[0m\u001b[31m · error\u001b[0m");
   expect(error).toContain("  \u001b[31mnot_authenticated\u001b[0m  Claude is not logged in.");
+});
+
+test("provider heading colors wrap only the name and preserve the rest of each header", () => {
+  const output = renderHuman(report(codex(), claude()), { ...opts, color: true });
+  const headers = output.split("\n\n").map((block) => block.split("\n")[0]!);
+  expect(headers[0]).toBe("\u001b[1m\u001b[36mCODEX\u001b[0m · plus · available");
+  expect(headers[1]).toBe("\u001b[1m\u001b[35mCLAUDE\u001b[0m · pro · available\u001b[2m (derived)\u001b[0m");
+  expect(headers[1]!.replace(/\u001b\[\d+m/g, "")).toBe("CLAUDE · pro · available (derived)");
+});
+
+test("Codex error headings retain cyan and style only the error suffix red", () => {
+  const provider = { ...failed(), provider: "codex" as const };
+  expect(renderHuman(report(provider), { ...opts, color: true }).split("\n")[0]).toBe(
+    "\u001b[1m\u001b[36mCODEX\u001b[0m\u001b[31m · error\u001b[0m",
+  );
 });

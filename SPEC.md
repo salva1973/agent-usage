@@ -365,7 +365,7 @@ export interface ProviderIssue {
 ```
 
 `ProviderIssue` is also used for warnings and for errors on `partial` reports. Additional codes:
-- **Warnings:** `unknown_limit_key`, `invalid_window` (a malformed individual window or field that was skipped), `timestamp_unit_heuristic`, `invalid_timestamp`, `invalid_number`, `ambiguous_units`, `precision_loss`, `duplicate_limit_id`, `auth_status_failed`, `analytics_not_supported`.
+- **Warnings:** `unknown_limit_key`, `invalid_window` (a malformed individual window or field that was skipped), `timestamp_unit_heuristic`, `invalid_timestamp`, `invalid_number`, `ambiguous_units`, `precision_loss`, `duplicate_limit_id`, `auth_status_failed`, `analytics_not_supported`, `demo_data` (demo mode only).
 - **Errors on `partial` reports:** `analytics_failed`.
 
 ### 6.3 Limit IDs (stable contract)
@@ -825,6 +825,7 @@ Options:
   --timeout <sec>     Per-provider timeout in seconds (default 20, min 1)
   --no-color          Disable ANSI colors (also: NO_COLOR env, non-TTY stdout)
   --debug             Diagnostic log lines to stderr (redacted; never payload values)
+  --demo              Print synthetic demo data (no providers are contacted)
   -h, --help
   -V, --version
 ```
@@ -838,7 +839,7 @@ Options:
 
 - One `UsageReport`, pretty-printed with 2 spaces, plus a trailing newline. Always printed, even when providers fail.
 - Nothing else goes to stdout. Diagnostics go to stderr.
-- Each invocation performs exactly one fetch and prints exactly one report.
+- Each invocation performs at most one fetch and prints exactly one report; `--demo` performs none.
 - The report contains only the fields defined in Section 6. There is no `raw` field.
 
 Contract and versioning:
@@ -930,6 +931,7 @@ CLAUDE · pro · available (derived)
 ```
 
 Header: `<PROVIDER UPPER> · <plan or "unknown plan"> · <state>`.
+- The provider name in every header is bold plus provider color: Codex cyan, Claude magenta, with bold applied before the color. Error headers keep the name in its provider color and ` · error` red. Colors appear only when stdout is a TTY, `--no-color` is absent, and `NO_COLOR` is unset or empty; JSON never contains ANSI.
 - `state` is `available`, or `LIMITED (<reason>)` in red/bold, or `status unknown` in yellow.
 - When `basis === "derived_from_limits"`, append ` (derived)`, dimmed when colors are on. Claude headers always show it.
 
@@ -986,6 +988,22 @@ Repeated polling is the caller's job in v1 (cron, a shell loop, or the library A
 
 - Availability (`limited`) **never** affects the exit code. It is an observation, not a failure.
 - With `--json`, stdout always contains a complete valid report for codes 0, 3 and 4.
+
+### 12.6 Demo mode
+
+`--demo` prints a deterministic synthetic `UsageReport` for screenshots, examples and demonstrations. All printed values are synthetic. It MUST NOT call `getUsage`, `getCodexUsage` or `getClaudeUsage`, spawn any process, communicate with either provider, read credentials or account state, or touch the network.
+
+Synthetic data is application-owned in `src/cli/demo.ts`, never imported from test fixtures. `createDemoReport({ now, providers, includeAnalytics, version })` is pure, imports only public API types, and uses only the supplied clock. Reset times are relative to that clock; Codex analytics have seven ascending UTC calendar-date buckets ending on its date. Demo mode adds no library exports or schema changes.
+
+Demo reports use the production human/JSON renderers, color rule and `exitCodeFor` logic through the same output path as normal reports. Every provider is `ok`, with zero duration, null provider version and no errors; the exit code is 0. Every provider has exactly one warning `{ code: "demo_data", message: "Synthetic demo data; no provider was contacted.", retryable: false, hint: null }`, making demo JSON machine-detectable. Human warnings appear only with `--debug`.
+
+- `--json` selects JSON; non-TTY output, `--no-color` and nonempty `NO_COLOR` suppress ANSI as usual. JSON never contains ANSI, including on a TTY.
+- Provider arguments preserve first-occurrence order and ignore duplicates; the default is Codex then Claude.
+- `--analytics` adds synthetic Codex analytics. Claude keeps `analytics: null` and places `analytics_not_supported` before `demo_data` in its warnings.
+- `--timeout` is accepted and validated as usual but has no effect in demo mode.
+- `--debug` writes exactly `[agent-usage] demo mode: synthetic data; no provider contacted\n` to stderr, and renders warnings as usual.
+- Help or version takes precedence over demo output. Invalid `AGENT_USAGE_NOW` remains a usage error (exit 2), following existing validation order.
+- Demo mode returns before fetch signal handlers are registered or any provider is called.
 
 ---
 
@@ -1192,7 +1210,7 @@ Other known limitations, documented in the README:
 - **Library:** `getUsage`, `getCodexUsage`, `getClaudeUsage`, `findLimit`, `UsageReportSchema`, `SCHEMA_VERSION`.
 - **Codex provider:** rate limits, credits, reset-credit count, optional analytics.
 - **Claude provider:** `get_usage`.
-- **CLI** (one fetch per invocation): human output, `--json`, provider selection, `--analytics`, `--timeout`, `--no-color`, `--debug`, `--help`, `--version`. Exit codes per Section 12.5, including 130 on interruption.
+- **CLI** (each invocation performs at most one fetch; `--demo` performs none): human output with provider heading colors (Codex cyan, Claude magenta), `--json`, provider selection, `--analytics`, `--timeout`, `--no-color`, `--debug`, `--demo`, `--help`, `--version`. Exit codes per Section 12.5, including 130 on interruption.
 - Redaction of error messages, stderr tails and debug output.
 - Generated JSON Schema. Tests per Section 13. README.
 
