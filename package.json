@@ -1,6 +1,6 @@
 {
   "name": "agent-usage",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "license": "MIT",
   "type": "module",
   "engines": { "node": ">=22" },
@@ -15,12 +15,12 @@
     "typecheck": "tsc --noEmit",
     "schema": "npm run build && node scripts/gen-schema.mjs"
   },
-  "dependencies": { "zod": "^4" },
+  "dependencies": { "zod": "^4.6.6" },
   "devDependencies": {
     "@types/node": "^22",
     "ajv": "^8",
     "ajv-formats": "^3",
     "typescript": "^5",
-    "vitest": "~4.0.0"
+    "vitest": "~4.1.12"
   }
 }
