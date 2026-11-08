@@ -29,6 +29,20 @@ npm ci && npm run build && npm link
 
 `npm link` is optional. Without linking, substitute `node dist/cli/main.js` for `agent-usage` in the examples below.
 
+To update an existing installation, from the same directory:
+
+```sh
+git pull --ff-only && npm ci && npm run build
+```
+
+On a machine that only runs the CLI (for example a Raspberry Pi), you can then remove the development tools (TypeScript, Vitest, Vite, esbuild), keeping only the runtime dependency `zod`:
+
+```sh
+npm prune --omit=dev
+```
+
+Run `npm ci` again before the next build.
+
 ## CLI usage
 
 The help synopsis is:
